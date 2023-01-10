@@ -3,20 +3,19 @@ from linkedineasyapply import LinkedinEasyApply
 from validate_email import validate_email
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
+
 
 def init_browser():
-    browser_options = webdriver.ChromeOptions()
+    browser_options = Options()
     options = ['--disable-blink-features', '--no-sandbox', '--start-maximized', '--disable-extensions',
                '--ignore-certificate-errors', '--disable-blink-features=AutomationControlled', '--remote-debugging-port=9222']
     for option in options:
         browser_options.add_argument(option)
-        
-    manager = ChromeDriverManager()
-    driver = webdriver.Chrome(chrome_options=browser_options, service_log_path='chromedriver.log', executable_path=manager.install())
+    driver = webdriver.Chrome(options=browser_options)
     driver.set_window_position(0, 0)
     driver.maximize_window()
     return driver
-
 
 def validate_yaml():
     with open("config.yaml", 'r') as stream:
@@ -117,3 +116,6 @@ if __name__ == '__main__':
     bot.login()
     bot.security_check()
     bot.start_applying()
+
+
+
