@@ -8,13 +8,11 @@ from selenium.webdriver.chrome.options import Options
 
 def init_browser():
     browser_options = Options()
-    options = ['--disable-blink-features', '--no-sandbox', '--start-maximized', '--disable-extensions',
-               '--ignore-certificate-errors', '--disable-blink-features=AutomationControlled', '--remote-debugging-port=9222']
+    options = ['--disable-blink-features', '--no-sandbox', '--disable-extensions',
+               '--ignore-certificate-errors', '--disable-blink-features=AutomationControlled','--disable-gpu','--remote-debugging-port=9222']
     for option in options:
         browser_options.add_argument(option)
     driver = webdriver.Chrome(options=browser_options)
-    driver.set_window_position(0, 0)
-    driver.maximize_window()
     return driver
 
 def validate_yaml():
