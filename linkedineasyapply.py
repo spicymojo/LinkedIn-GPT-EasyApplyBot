@@ -330,15 +330,15 @@ class LinkedinEasyApply:
                 self.additional_questions_drop_down(el)
 
                 # Checkbox check for agreeing to terms and service
-                try:
-                    question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
+                self.additional_questions_agree_terms_of_service(el)
 
-                    clickable_checkbox = question.find_element(By.TAG_NAME, 'label')
-
-                    clickable_checkbox.click()
-                except:
-                    pass
-
+    def additional_questions_agree_terms_of_service(self, el):
+        try:
+            question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
+            clickable_checkbox = question.find_element(By.TAG_NAME, 'label')
+            clickable_checkbox.click()
+        except:
+            pass
 
     def additional_questions_drop_down(self, el):
         try:
@@ -618,6 +618,7 @@ class LinkedinEasyApply:
         except:
             pass
 
+    # MARK: - Helper Methods
     def unfollow(self):
         try:
             follow_checkbox = self.browser.find_element(By.XPATH, "//label[contains(.,\'to stay up to date with their page.\')]").click()
