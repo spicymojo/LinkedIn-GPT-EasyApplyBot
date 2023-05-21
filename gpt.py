@@ -3,7 +3,7 @@ from langchain import PromptTemplate, OpenAI
 
 
 class GPTAnswerer:
-    def __int__(self, resume: str):
+    def __init__(self, resume: str):
         self.resume = resume
         self.llm = OpenAI(model_name="text-davinci-003", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5, max_tokens=-1)
 
