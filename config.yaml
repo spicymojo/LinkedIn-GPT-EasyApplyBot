@@ -59,6 +59,8 @@ uploads:
  resume: C:\Users\myDirectory\Resume.pdf
  # Cover letter is optional
  #coverLetter: C:\Users\myDirectory\CoverLettter.pdf
+ # Plain text resume - preferably on markdown format
+ plainTextResume: C:\Users\myDirectory\PlainTextResume.md
 
 
 # ------------ QA section -------------------

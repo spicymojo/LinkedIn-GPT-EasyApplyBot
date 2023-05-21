@@ -5,6 +5,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from datetime import date
 from itertools import product
+from gpt import GPTAnswerer
 
 
 class LinkedinEasyApply:
@@ -37,6 +38,11 @@ class LinkedinEasyApply:
         self.eeo = parameters.get('eeo', [])
         self.experience_default = self.experience['default']
 
+        # GPT Answerer - for answering questions as fallback
+        plain_text_resume_path = parameters['uploads']['plainTextResume']
+        file = open(plain_text_resume_path, "r")       # Read the file
+        plain_text_resume = file.read()
+        self.gpt_answerer = GPTAnswerer(plain_text_resume)
 
     def login(self):
         try:
