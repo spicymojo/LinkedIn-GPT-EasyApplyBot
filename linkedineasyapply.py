@@ -762,20 +762,28 @@ class LinkedinEasyApply:
                 for pb in pb4:
                     try:
                         label = pb.find_element(By.TAG_NAME, 'h3').text.lower()
-                        try:
-                            self.additional_questions()
-                        except:
-                            pass
 
-                        try:
-                            self.send_resume()
-                        except:
-                            pass
-
+                        # 1. Fill up the form with the personal info if possible
                         if 'home address' in label:
                             self.home_address(pb)
-                        elif 'contact info' in label:
+                            continue
+
+                        if 'contact info' in label:
                             self.contact_info()
+                            continue
+
+                        # 2. Fill up the form with the other information
+                        try:
+                            self.additional_questions()
+                        except Exception as e:
+                            pass
+
+                        # 3. Send the resume and cover letter
+                        try:
+                            self.send_resume()
+                        except Exception as e:
+                            pass
+
                     except:
                         pass
         except:
