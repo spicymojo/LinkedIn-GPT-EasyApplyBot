@@ -556,6 +556,11 @@ class LinkedinEasyApply:
             pass
 
     def additional_questions_radio(self, el):
+        """
+        This function handles radio buttons
+        :param el: The element containing the radio buttons
+        :return:
+        """
         try:
             question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
             radios = question.find_elements(By.CLASS_NAME, 'fb-text-selectable__option')
@@ -609,9 +614,12 @@ class LinkedinEasyApply:
             elif 'sponsor' in radio_text:
                 answer = self.get_answer('requireVisa')
             else:
-                # TODO: Ask GPT
-                answer = radio_options[len(radio_options) - 1]
-                self.record_unprepared_question("radio", radio_text)
+                # Ask gpt for the most likely answer
+                answer = self.gpt_answerer.answer_question_from_selection(radio_text, radio_options)
+                self.record_unprepared_question_gpt_answer("radio", radio_text, answer)
+                # Old way to do it
+                # answer = radio_options[len(radio_options) - 1]
+                # self.record_unprepared_question("radio", radio_text)
 
             i = 0
             to_select = None
@@ -639,6 +647,7 @@ class LinkedinEasyApply:
             pass
 
     def send_resume(self):
+        # TODO: send_resume() is not working
         try:
             file_upload_elements = (By.CSS_SELECTOR, "input[name='file']")
             if len(self.browser.find_elements(file_upload_elements[0], file_upload_elements[1])) > 0:
