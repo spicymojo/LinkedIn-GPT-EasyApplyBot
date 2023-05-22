@@ -333,6 +333,7 @@ class LinkedinEasyApply:
         frm_el = self.browser.find_elements(By.CLASS_NAME, 'jobs-easy-apply-form-section__grouping')
         if len(frm_el) > 0:
             for el in frm_el:
+                # TODO: After step is completed, continue to next iteration of loop
                 # Radio check
                 self.additional_questions_radio(el)
 
@@ -537,6 +538,7 @@ class LinkedinEasyApply:
             elif 'text' in text_field_type:
                 text_field_type = 'text'
             else:
+                # TODO: Just return
                 raise Exception("Could not determine input type of input field!")
 
             # - Field value predefined response
@@ -596,8 +598,8 @@ class LinkedinEasyApply:
             # - Enter the answer
             self.enter_text(txt_field, to_enter)
 
-        except:
-            pass
+        except Exception as e:
+            print("Error in additional_questions_textbox: " + str(e))
 
     def additional_questions_radio(self, el):
         """

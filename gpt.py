@@ -27,6 +27,7 @@ class GPTAnswerer:
         - The answer must be a sentence.
         - If seems likely that you have the experience based on the resume, even if is not explicit on the resume, answer as if you have the experience.
         - If you cannot answer the question, answer things like "I have no experience with that, but I learn fast, very fast".
+        - The answer must not be larger than a tweet (140 characters).
 
         ## Example
         Resume: I'm a software engineer with 10 years of experience on both swift and python.
