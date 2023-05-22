@@ -1,6 +1,6 @@
 import os
 from langchain import PromptTemplate, OpenAI
-
+from Levenshtein import distance
 
 class GPTAnswerer:
     def __init__(self, resume: str):
@@ -21,13 +21,17 @@ class GPTAnswerer:
 
         return key
 
-    def answer_question(self, question: str):
+    def answer_question_textual(self, question: str) -> str:
         template = """The following is a resume and an answered question about the resume, being answered by the person who's resume it is (first person).
-        
+        ## Rules
+        - The answer must be a sentence.
+        - If seems likely that you have the experience based on the resume, even if is not explicit on the resume, answer as if you have the experience.
+        - If you cannot answer the question, answer things like "I have no experience with that, but I learn fast, very fast".
+
         ## Example
-        Resume: I'm a software engineer with 10 years of experience on swift and python.
-        Question: What is your experience on swift?
-        Answer: I have 10 years of experience on swift.
+        Resume: I'm a software engineer with 10 years of experience on both swift and python.
+        Question: What is your experience with swift?
+        Answer: I have 10 years of experience with swift.
 
         ## Resume:
         ```
@@ -42,5 +46,82 @@ class GPTAnswerer:
         prompt = PromptTemplate(input_variables=["resume", "question"], template=template)          # Define the prompt (template)
         formatted_prompt = prompt.format_prompt(resume=self.resume, question=question)              # Format the prompt with the data
         output = self.llm(formatted_prompt.to_string())                                             # Send the prompt to the llm
+
+        return output
+
+    def answer_question_numeric(self, question: str, default_experience: int = 0) -> int:
+        template = """The following is a resume and an answered question about the resume, the answer is an integer number.
+        
+        ## Rules
+        - The answer must be an integer number.
+        - The answer must only contain digits.
+        - If you cannot answer the question, answer {default_experience}.
+        
+        ## Example
+        Resume: I'm a software engineer with 10 years of experience on swift and python.
+        Question: How many years of experience do you have on swift?
+        Answer: 10
+
+        ## Resume:
+        ```
+        {resume}
+        ```
+
+        ## Question:
+        {question}
+        
+        ## Answer:"""
+
+        prompt = PromptTemplate(input_variables=["default_experience", "resume", "question"], template=template)                # Define the prompt (template)
+        formatted_prompt = prompt.format_prompt(resume=self.resume, question=question, default_experience=default_experience)   # Format the prompt with the data
+        output_str = self.llm(formatted_prompt.to_string())                 # Send the prompt to the llm
+        # Convert to int with error handling
+        try:
+            output = int(output_str)                                            # Convert the output to an integer
+        except ValueError:
+            output = default_experience                                         # If the output is not an integer, return the default experience
+            # Print error message
+            print(f"Error: The output of the LLM is not an integer number. The default experience ({default_experience}) will be returned instead. The output was: {output_str}")
+
+        return output
+
+    def answer_question_from_selection(self, question: str, options: list[str]) -> str:
+        template = """The following is a resume and an answered question about the resume, the answer is one of the options.
+        
+        ## Rules
+        - The answer must be one of the options.
+        - The answer must exclusively contain one of the options.
+        - Answer the option that seems most likely based on the resume.
+        
+        ## Example
+        Resume: I'm a software engineer with 10 years of experience on swift, python, C, C++.
+        Question: How many years of experience do you have on python?
+        Options: [1-2, 3-5, 6-10, 10+]
+        Answer: 10+
+
+        ## Resume:
+        ```
+        {resume}
+        ```
+
+        ## Question:
+        {question}
+        
+        ## Options:
+        {options}
+        
+        ## Answer:"""
+
+        prompt = PromptTemplate(input_variables=["resume", "question", "options"], template=template)                # Define the prompt (template)
+        formatted_prompt = prompt.format_prompt(resume=self.resume, question=question, options=options)   # Format the prompt with the data
+
+        output = self.llm(formatted_prompt.to_string())                 # Send the prompt to the llm
+
+        # Guard the output is one of the options
+        if output not in options:
+            # Choose the closest option to the output, using a levenshtein distance
+            closest_option = min(options, key=lambda option: distance(output, option))
+            output = closest_option
+            print(f"Error: The output of the LLM is not one of the options. The closest option ({closest_option}) will be returned instead. The output was: {output}, options were: {options}")
 
         return output

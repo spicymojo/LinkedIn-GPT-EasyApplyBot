@@ -23,6 +23,7 @@ class LinkedinEasyApply:
         self.seen_jobs = []
         self.file_name = "output"
         self.unprepared_questions_file_name = "unprepared_questions"
+        self.unprepared_questions_gpt_file_name = "unprepared_questions_gpt_answered"
         self.output_file_directory = parameters['outputFileDirectory']
         self.resume_dir = parameters['uploads']['resume']
         if 'coverLetter' in parameters['uploads']:
@@ -43,6 +44,8 @@ class LinkedinEasyApply:
         file = open(plain_text_resume_path, "r")       # Read the file
         plain_text_resume: str = file.read()
         self.gpt_answerer = GPTAnswerer(plain_text_resume)
+
+        # TODO: Add plain text cover letter.
 
     def login(self):
         try:
@@ -321,7 +324,7 @@ class LinkedinEasyApply:
                 self.additional_questions_radio(el)
 
                 # Questions check
-                self.additional_questions_textual(el)
+                self.additional_questions_textbox(el)
 
                 # Date Check
                 self.additional_questions_date(el)
@@ -467,7 +470,7 @@ class LinkedinEasyApply:
         except:
             pass
 
-    def additional_questions_textual(self, el):
+    def additional_questions_textbox(self, el):
         try:
             question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
             question_text = question.find_element(By.TAG_NAME, 'label').text.lower()
@@ -483,6 +486,7 @@ class LinkedinEasyApply:
                 except:
                     raise Exception("Could not find textarea or input tag for question")
 
+            # - Field type
             text_field_type = txt_field.get_attribute('type').lower()
             if 'numeric' in text_field_type:  # TODO: test numeric type
                 text_field_type = 'numeric'
@@ -491,6 +495,7 @@ class LinkedinEasyApply:
             else:
                 raise Exception("Could not determine input type of input field!")
 
+            # - Field value predefined response
             to_enter = ''
             if 'experience' in question_text:
                 no_of_years = None
@@ -499,10 +504,11 @@ class LinkedinEasyApply:
                         no_of_years = self.experience[experience]
                         break
                 if no_of_years is None:
-                    # TODO: Ask GPT
-                    self.record_unprepared_question(text_field_type, question_text)
-                    no_of_years = self.experience_default
+                    # 1. Ask GPT for answer
+                    no_of_years = self.gpt_answerer.answer_question_numeric(question_text, default_experience=self.experience_default)
+                    self.record_unprepared_question_gpt_answer(text_field_type, question_text, no_of_years)
                 to_enter = no_of_years
+
             elif 'grade point average' in question_text:
                 to_enter = self.university_gpa
             elif 'first name' in question_text:
@@ -524,20 +530,26 @@ class LinkedinEasyApply:
                     to_enter = self.salary_minimum
                 else:
                     to_enter = "$" + self.salary_minimum + "+"
-            else:
-                # TODO: Ask GPT
-                if text_field_type == 'numeric':
-                    to_enter = 0
-                else:
-                    to_enter = " ‏‏‎ "
-                self.record_unprepared_question(text_field_type, question_text)
 
+            # - Field value not predefined
+            else:
+                # There is no predicate for this question, so we ask GPT
+                if text_field_type == 'numeric':
+                    to_enter = self.gpt_answerer.answer_question_numeric(question_text)
+                else:
+                    to_enter = self.gpt_answerer.answer_question_textual(question_text)
+                    # to_enter = " ‏‏‎ "
+                self.record_unprepared_question_gpt_answer(text_field_type, question_text, to_enter)
+
+            # - Final check
+            # TODO: Try to parse the string to a number if it is numeric
             if text_field_type == 'numeric':
                 if not isinstance(to_enter, (int, float)):
                     to_enter = 0
             elif to_enter == '':
-                to_enter = " ‏‏‎ "
+                to_enter = " ‏‏‎ "      # Why these characters? So the answer is not empty?
 
+            # - Enter the answer
             self.enter_text(txt_field, to_enter)
 
         except:
@@ -733,6 +745,18 @@ class LinkedinEasyApply:
                 writer.writerow(to_write)
         except:
             print("Could not write the unprepared question to the file! No special characters in the question is allowed: ")
+            print(question_text)
+
+    def record_unprepared_question_gpt_answer(self, answer_type, question_text, gpt_response):
+        to_write = [answer_type, question_text, gpt_response]
+        file_path = self.unprepared_questions_gpt_file_name + ".csv"
+
+        try:
+            with open(file_path, 'a') as f:
+                writer = csv.writer(f)
+                writer.writerow(to_write)
+        except:
+            print("Could not write the unprepared gpt question to the file! No special characters in the question is allowed: ")
             print(question_text)
 
     def scroll_slow(self, scrollable_element, start=0, end=3600, step=100, reverse=False):
