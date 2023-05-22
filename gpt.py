@@ -85,7 +85,7 @@ class GPTAnswerer:
 
         return output
 
-    def answer_question_from_selection(self, question: str, options: list[str]) -> str:
+    def answer_question_from_options(self, question: str, options: list[str]) -> str:
         template = """The following is a resume and an answered question about the resume, the answer is one of the options.
         
         ## Rules

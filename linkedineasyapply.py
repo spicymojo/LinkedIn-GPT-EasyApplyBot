@@ -308,11 +308,24 @@ class LinkedinEasyApply:
             pass
 
     def get_answer(self, question):
+        """
+        Sees if the key `question` is in the dictionary `checkboxes` and returns "yes" is true and "no" if false
+        """
+        # TODO: This should be a boolean test, why is it a string?
         if self.checkboxes[question]:
             return 'yes'
         else:
-            # TODO: Ask GPT, if not found on the checkboxes list, see if GPT can answer it
             return 'no'
+
+    def get_checkbox_answer(self, question_key):
+        """
+        Sees if the key `question` is in the dictionary `checkboxes` and returns True if true and False if false.
+        :param question_key: The question to check for in the dictionary.
+        """
+        if self.checkboxes[question_key]:
+            return True
+        else:
+            return False
 
     # MARK: Additional Questions
     def additional_questions(self):
@@ -352,6 +365,7 @@ class LinkedinEasyApply:
             select = Select(dropdown_field)
             options = [options.text for options in select.options]
 
+            # - Language questions
             if 'proficiency' in question_text:
                 proficiency = "Conversational"
 
@@ -362,41 +376,56 @@ class LinkedinEasyApply:
 
                 self.select_dropdown(dropdown_field, proficiency)
 
-            elif 'assessment' in question_text:
-                answer = self.get_answer('assessment')
-                self.select_dropdown_using_answer(answer, dropdown_field, options)
-
-            elif 'commut' in question_text:
-                answer = self.get_answer('commute')
-                self.select_dropdown_using_answer(answer, dropdown_field, options)
-
             elif 'country code' in question_text:
                 self.select_dropdown(dropdown_field, self.personal_info['Phone Country Code'])
 
-            elif 'north korea' in question_text:
-                # Select No by default
-                self.select_dropdown_no(dropdown_field, options)
+            # - YES or NO questions. Options can be answered with yes or no. Dumb check for yes or no.
+            elif 'yes' in options or 'no' in options:
+                if 'assessment' in question_text:
+                    answer = self.get_checkbox_answer('assessment')
+                    self.select_dropdown_using_answer_boolean(answer, dropdown_field, options, question_text)
 
-            elif 'previously employed' in question_text or 'previous employment' in question_text:
+                elif 'commut' in question_text:
+                    answer = self.get_checkbox_answer('commute')
+                    self.select_dropdown_using_answer_boolean(answer, dropdown_field, options, question_text)
 
-                self.select_dropdown_no(dropdown_field, options)
+                elif 'north korea' in question_text:
+                    self.select_dropdown_no(dropdown_field, options)    # Nothing to do with North Korea
 
-            elif 'sponsor' in question_text:
-                answer = self.get_answer('requireVisa')
-                self.select_dropdown_using_answer(answer, dropdown_field, options)
+                elif 'previously employed' in question_text or 'previous employment' in question_text:
+                    self.select_dropdown_no(dropdown_field, options)    # Nothing to do with the company previously
 
-            elif 'authorized' in question_text or 'authorised' in question_text:
-                answer = self.get_answer('legallyAuthorized')
-                self.select_dropdown_using_answer(answer, dropdown_field, options)
+                elif 'sponsor' in question_text:
+                    answer = self.get_checkbox_answer('requireVisa')
+                    self.select_dropdown_using_answer_boolean(answer, dropdown_field, options, question_text)
 
-            elif 'citizenship' in question_text:
-                answer = self.get_answer('legallyAuthorized')
-                self.select_dropdown_using_answer(answer, dropdown_field, options)
+                elif 'authorized' in question_text or 'authorised' in question_text:
+                    answer = self.get_checkbox_answer('legallyAuthorized')
+                    self.select_dropdown_using_answer_boolean(answer, dropdown_field, options, question_text)
 
-            elif 'clearance' in question_text:
-                answer = self.get_answer('clearance')
-                self.select_dropdown_using_answer(answer, dropdown_field, options)
+                elif 'citizenship' in question_text:
+                    answer = self.get_checkbox_answer('legallyAuthorized')
+                    self.select_dropdown_using_answer_boolean(answer, dropdown_field, options, question_text)
 
+                elif 'clearance' in question_text:
+                    answer = self.get_checkbox_answer('clearance')
+                    self.select_dropdown_using_answer_boolean(answer, dropdown_field, options, question_text)
+
+                elif 'experience' in question_text or 'understanding' in question_text or 'familiar' in question_text or 'comfortable' in question_text or 'able to' in question_text:
+                    answer = 'no'
+                    for experience in self.experience:
+                        if experience.lower() in question_text and self.experience[experience] > 0:
+                            answer = 'yes'
+                            break
+                    if answer == 'no':
+                        # Ask GPT for an answer, as the resume might reflect the experience
+                        answer = self.gpt_answerer.answer_question_from_options(question_text, options)
+                        # Record unlisted experience as unprepared questions
+                        self.record_unprepared_question_gpt_answer("dropdown", question_text, answer)
+
+                    self.select_dropdown_using_answer(answer, dropdown_field, options)
+
+            # - Questions that have a specific answer, US employment equality bullshit
             elif 'gender' in question_text or 'veteran' in question_text or 'race' in question_text or 'disability' in question_text or 'latino' in question_text:
                 choice = ""
                 for option in options:
@@ -409,30 +438,13 @@ class LinkedinEasyApply:
             elif 'email' in question_text:
                 return  # assume email address is filled in properly by default
 
-            elif 'experience' in question_text or 'understanding' in question_text or 'familiar' in question_text or 'comfortable' in question_text or 'able to' in question_text:
-                answer = 'no'
-                for experience in self.experience:
-                    if experience.lower() in question_text and self.experience[experience] > 0:
-                        answer = 'yes'
-                        break
-                if answer == 'no':
-                    # TODO: Ask GPT
-                    # record unlisted experience as unprepared questions
-                    self.record_unprepared_question("dropdown", question_text)
-
-                self.select_dropdown_using_answer(answer, dropdown_field, options)
-
+            # - Couldn't infer the question's answer, fallback
             else:
-                # Fall back, no matching predicate found
-                # TODO: ASK GPT
-                choice = ""
-                for option in options:
-                    if 'yes' in option.lower():
-                        choice = option
-                if choice == "":
-                    choice = options[len(options) - 1]
+                # Let's use GPT to answer the question
+                choice = self.gpt_answerer.answer_question_from_options(question_text, options)
                 self.select_dropdown(dropdown_field, choice)
-                self.record_unprepared_question("dropdown", question_text)
+                self.record_unprepared_question_gpt_answer("dropdown", question_text, choice)
+
         except:
             pass
 
@@ -445,17 +457,49 @@ class LinkedinEasyApply:
             choice = options[len(options) - 1]
         self.select_dropdown(dropdown_field, choice)
 
-    def select_dropdown_using_answer(self, answer, dropdown_field, options):
+    def select_dropdown_using_answer(self, answer: str, dropdown_field, options):
+        """
+        Selects the dropdown option that contains the answer, oly works for yes/no answers.
+        :param answer: 'yes' or 'no'
+        :param dropdown_field: The dropdown field
+        :param options: The options in the dropdown field
+        """
+        # Select the option that contains the answer
         choice = ""
+
         for option in options:
-            if answer == 'yes':
+            if answer == 'yes' and 'yes' in option.lower():
                 choice = option
-            else:
-                if 'no' in option.lower():
-                    choice = option
+            if answer == 'no' and 'no' in option.lower():
+                choice = option
         if choice == "":
-            # TODO: This is a fallback, ask GPT for answer -> Should have access to the question here
+            # If no option contains the answer, select the last option, this is stupid...
+            # TODO: Ask GPT, but it will need the question text
             choice = options[len(options) - 1]
+
+        self.select_dropdown(dropdown_field, choice)
+
+    def select_dropdown_using_answer_boolean(self, answer: bool, dropdown_field, options, question: str):
+        """
+        Selects the dropdown option that contains the answer, oly works for yes/no answers.
+        :param answer: 'yes' or 'no'
+        :param dropdown_field: The dropdown field
+        :param options: The options in the dropdown field
+        :param question: The question text
+        """
+        # Select the option that contains the answer
+        choice = ""
+
+        for option in options:
+            if answer and 'yes' in option.lower():
+                choice = option
+            if not answer and 'no' in option.lower():
+                choice = option
+        if choice == "":
+            # If no option contains the answer, select the last option, this is stupid...
+            # TODO: Ask GPT, but it will need the question text
+            choice = options[len(options) - 1]
+
         self.select_dropdown(dropdown_field, choice)
 
     def additional_questions_date(self, el):
@@ -615,7 +659,7 @@ class LinkedinEasyApply:
                 answer = self.get_answer('requireVisa')
             else:
                 # Ask gpt for the most likely answer
-                answer = self.gpt_answerer.answer_question_from_selection(radio_text, radio_options)
+                answer = self.gpt_answerer.answer_question_from_options(radio_text, radio_options)
                 self.record_unprepared_question_gpt_answer("radio", radio_text, answer)
                 # Old way to do it
                 # answer = radio_options[len(radio_options) - 1]
