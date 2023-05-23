@@ -7,11 +7,14 @@ This bot is written in Python using Selenium.
 
 ## Fork Notes
 
-The original code was failing and no longer maintained. This was forked for the purpose of patching and sharing with new features added.
-
-By Michael Dingess
+Changes to support open questions using OpenAI api. (This is a work in progress)
+_by Jorge Frías_
 
 ## Setup & Startup
+
+First you need to provide your Open AI API key using environment variable OPEN_AI_API_KEY.
+
+```bash
 
 To run the bot, open the command line in the cloned repository directory. Activate the virtual environment and start the bot using these commands:
 ```bash

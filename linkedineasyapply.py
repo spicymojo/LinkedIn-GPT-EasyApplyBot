@@ -329,7 +329,6 @@ class LinkedinEasyApply:
 
     # MARK: Additional Questions
     def additional_questions(self):
-        #pdb.set_trace()
         frm_el = self.browser.find_elements(By.CLASS_NAME, 'jobs-easy-apply-form-section__grouping')
         if len(frm_el) > 0:
             for el in frm_el:
