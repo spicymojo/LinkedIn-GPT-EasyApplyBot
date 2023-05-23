@@ -3,7 +3,6 @@ from langchain import PromptTemplate, OpenAI
 from Levenshtein import distance
 
 
-# TODO: Add the personal data to the context.
 # TODO: Add a preprocessor to select better the context: resume, personal data, or cover letter.
 class GPTAnswerer:
     def __init__(self, resume: str, personal_data: str, cover_letter: str = ""):

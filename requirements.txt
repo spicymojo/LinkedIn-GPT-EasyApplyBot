@@ -4,3 +4,4 @@ webdriver_manager
 PyYAML~=6.0
 validate_email
 langchain~=0.0.175
+Levenshtein~=0.21.0
