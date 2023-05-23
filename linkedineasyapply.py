@@ -180,7 +180,6 @@ class LinkedinEasyApply:
             # Record the successful application
             self.record_successful_application(company, job_location, job_title, link, location)
 
-
     def record_successful_application(self, company, job_location, job_title, link, location):
         """
         Records the successful application to the job in the csv file.
@@ -412,30 +411,35 @@ class LinkedinEasyApply:
 
                 # Radio check
                 try:
-                    self.additional_questions_radio(el)
+                    # self.additional_questions_radio(el)
+                    self.additional_questions_radio_gpt(el)
                 except Exception as e:
                     pass
 
                 # Questions check
                 try:
-                    self.additional_questions_textbox(el)
+                    # self.additional_questions_textbox(el)
+                    self.additional_questions_textbox_gpt(el)
                 except Exception as e:
                     pass
 
                 # Date Check
                 try:
+                    # Works just fine without GPT
                     self.additional_questions_date(el)
                 except Exception as e:
                     pass
 
                 # Dropdown check
                 try:
-                    self.additional_questions_drop_down(el)
+                    # self.additional_questions_drop_down(el)
+                    self.additional_questions_drop_down_gpt(el)
                 except Exception as e:
                     pass
 
                 # Checkbox check for agreeing to terms and service
                 try:
+                    # Works just fine without GPT
                     self.additional_questions_agree_terms_of_service(el)
                 except Exception as e:
                     pass
@@ -444,6 +448,23 @@ class LinkedinEasyApply:
         question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
         clickable_checkbox = question.find_element(By.TAG_NAME, 'label')
         clickable_checkbox.click()
+
+    def additional_questions_drop_down_gpt(self, el):
+        question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
+        question_text = question.find_element(By.TAG_NAME, 'label').text.lower()
+        dropdown_field = question.find_element(By.TAG_NAME, 'select')
+
+        select = Select(dropdown_field)
+        options = [options.text for options in select.options]
+
+        # Hardcoded answers
+        if 'email' in question_text:
+            return  # assume email address is filled in properly by default
+
+        # Answer any other the question
+        choice = self.gpt_answerer.answer_question_from_options(question_text, options)
+        self.select_dropdown(dropdown_field, choice)
+        self.record_unprepared_question_gpt_answer("dropdown", question_text, choice)
 
     def additional_questions_drop_down(self, el):
         question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
@@ -595,6 +616,37 @@ class LinkedinEasyApply:
         date_picker.send_keys(Keys.RETURN)
         time.sleep(2)
 
+    def additional_questions_textbox_gpt(self, el):
+        # Question information
+        question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
+        question_text = question.find_element(By.TAG_NAME, 'label').text.lower()
+        try:
+            txt_field = question.find_element(By.TAG_NAME, 'input')
+        except:
+            try:
+                txt_field = question.find_element(By.TAG_NAME, 'textarea')  # TODO: Test textarea
+            except:
+                raise Exception("Could not find textarea or input tag for question")
+
+        # Field type
+        text_field_type = txt_field.get_attribute('type').lower()
+        if 'numeric' in text_field_type:                                    # TODO: test numeric type
+            text_field_type = 'numeric'
+        elif 'text' in text_field_type:
+            text_field_type = 'text'
+        else:
+            return      # This function doesn't support other types, just return
+
+        # Use GPT to answer the question
+        to_enter = ''
+        if text_field_type == 'numeric':
+            to_enter = self.gpt_answerer.answer_question_numeric(question_text)
+        else:
+            to_enter = self.gpt_answerer.answer_question_textual(question_text)
+
+        # Enter the answer
+        self.enter_text(txt_field, to_enter)
+
     def additional_questions_textbox(self, el):
         question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
         question_text = question.find_element(By.TAG_NAME, 'label').text.lower()
@@ -676,6 +728,39 @@ class LinkedinEasyApply:
 
         # - Enter the answer
         self.enter_text(txt_field, to_enter)
+
+    def additional_questions_radio_gpt(self, el):
+        """
+        This function handles radio buttons
+        :param el: The element containing the radio buttons
+        """
+        # Question information
+        question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
+        radios = question.find_elements(By.CLASS_NAME, 'fb-text-selectable__option')
+        if len(radios) == 0:
+            raise Exception("No radio found in element")
+
+        radio_text = el.text.lower()
+        radio_options = [text.text.lower() for text in radios]
+
+        # Ask gpt for the most likely answer
+        answer = "yes"
+        answer = self.gpt_answerer.answer_question_from_options(radio_text, radio_options)
+        # TODO: Record the answer, renaming the function to record_gpt_answer()
+        self.record_unprepared_question_gpt_answer("radio", radio_text, answer)
+
+        # Select the radio that matches the answer
+        to_select = None
+        for radio in radios:
+            if answer in radio.text.lower():
+                to_select = radio
+
+        # Fallback to the last radio if no answer was found
+        if to_select is None:
+            to_select = radios[-1]
+
+        # Select the chosen radio
+        self.radio_select_simplified(to_select)
 
     def additional_questions_radio(self, el):
         """
@@ -802,27 +887,34 @@ class LinkedinEasyApply:
         else:
             pass
 
+    def radio_select_simplified(self, element):
+        label = element.find_element(By.TAG_NAME, 'label')
+        label.click()
+
     # Contact info fill-up
     def contact_info(self):
         frm_el = self.browser.find_elements(By.CLASS_NAME, 'jobs-easy-apply-form-section__grouping')
-        if len(frm_el) > 0:
-            for el in frm_el:
-                text = el.text.lower()
-                if 'email address' in text:
-                    continue
-                elif 'phone number' in text:
-                    try:
-                        country_code_picker = el.find_element(By.XPATH, '//select[contains(@id,"phoneNumber")][contains(@id,"country")]')
-                        self.select_dropdown(country_code_picker, self.personal_info['Phone Country Code'])
-                    except Exception as e:
-                        print("Country code " + self.personal_info['Phone Country Code'] + " not found! Make sure it is exact.")
-                        print(e)
-                    try:
-                        phone_number_field = el.find_element(By.XPATH, '//input[contains(@id,"phoneNumber")][contains(@id,"nationalNumber")]')
-                        self.enter_text(phone_number_field, self.personal_info['Mobile Phone Number'])
-                    except Exception as e:
-                        print("Could not input phone number:")
-                        print(e)
+
+        if len(frm_el) == 0:
+            return
+
+        for el in frm_el:
+            text = el.text.lower()
+            if 'email address' in text:
+                continue
+            elif 'phone number' in text:
+                try:
+                    country_code_picker = el.find_element(By.XPATH, '//select[contains(@id,"phoneNumber")][contains(@id,"country")]')
+                    self.select_dropdown(country_code_picker, self.personal_info['Phone Country Code'])
+                except Exception as e:
+                    print("Country code " + self.personal_info['Phone Country Code'] + " not found! Make sure it is exact.")
+                    print(e)
+                try:
+                    phone_number_field = el.find_element(By.XPATH, '//input[contains(@id,"phoneNumber")][contains(@id,"nationalNumber")]')
+                    self.enter_text(phone_number_field, self.personal_info['Mobile Phone Number'])
+                except Exception as e:
+                    print("Could not input phone number:")
+                    print(e)
 
     def fill_up(self):
         """

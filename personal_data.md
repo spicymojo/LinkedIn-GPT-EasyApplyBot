@@ -20,6 +20,13 @@ Personal Info
 | English  | Native or bilingual |
 | Spanish  | Native or bilingual |
 
+| Field      | Value             |
+|------------|-------------------|
+| Gender     | prefer not to say |
+| Veteran    | prefer not to say |
+| Disability | prefer not to say |
+| Ethnicity  | prefer not to say |
+
 
 Legal authorization to work in...
 

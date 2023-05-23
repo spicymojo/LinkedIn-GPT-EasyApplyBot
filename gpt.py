@@ -2,6 +2,8 @@ import os
 from langchain import PromptTemplate, OpenAI
 from Levenshtein import distance
 
+
+# TODO: Add the personal data to the context.
 class GPTAnswerer:
     def __init__(self, resume: str):
         self.resume = resume
