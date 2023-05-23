@@ -91,6 +91,7 @@ class LinkedinEasyApply:
                     self.apply_jobs(location)
                     print("Applying to jobs on this page has been completed!")
 
+                    # Sleep for a random amount of time between 5 and 15 minutes.
                     time_left = minimum_page_time - time.time()
                     if time_left > 0:
                         print("Sleeping for " + str(time_left) + " seconds.")
@@ -143,83 +144,113 @@ class LinkedinEasyApply:
         if len(job_list) == 0:
             raise Exception("No more jobs on this page")
 
+        # Iterate through each job on the page
         for job_tile in job_list:
-            job_title, company, poster, job_location, apply_method, link = "", "", "", "", "", ""
+
+            # Extract the job information
+            job_title, company, job_location, link, poster, apply_method = self.extract_job_information(job_tile)
+            # Check if the job is blacklisted
+            is_blacklisted = self.is_blacklisted(job_title, company, poster, link)
+            # Remember the job
+            self.seen_jobs += link
+
+            if is_blacklisted:
+                print("Job contains blacklisted keyword or company or poster name!")
+                continue
 
             try:
-                job_title = job_tile.find_element(By.CLASS_NAME, 'job-card-list__title').text
-                link = job_tile.find_element(By.CLASS_NAME, 'job-card-list__title').get_attribute('href').split('?')[0]
-            except:
-                pass
-            try:
-                company = job_tile.find_element(By.CLASS_NAME, 'job-card-container__company-name').text
-            except:
-                pass
-            try:
-                # get the name of the person who posted for the position, if any is listed
-                hiring_line = job_tile.find_element(By.XPATH, '//span[contains(.,\' is hiring for this\')]')
-                hiring_line_text = hiring_line.text
-                name_terminating_index = hiring_line_text.find(' is hiring for this')
-                if name_terminating_index != -1:
-                    poster = hiring_line_text[:name_terminating_index]
-            except:
-                pass
-            try:
-                job_location = job_tile.find_element(By.CLASS_NAME, 'job-card-container__metadata-item').text
-            except:
-                pass
-            try:
-                apply_method = job_tile.find_element(By.CLASS_NAME, 'job-card-container__apply-method').text
-            except:
-                pass
+                job_el = job_tile.find_element(By.CLASS_NAME, 'job-card-list__title')
+                job_el.click()
 
-            contains_blacklisted_keywords = False
-            job_title_parsed = job_title.lower().split(' ')
+                time.sleep(random.uniform(3, 5))
 
-            for word in self.title_blacklist:
-                if word.lower() in job_title_parsed:
-                    contains_blacklisted_keywords = True
-                    break
-
-            if company.lower() not in [word.lower() for word in self.company_blacklist] and \
-                    poster.lower() not in [word.lower() for word in self.poster_blacklist] and \
-                    contains_blacklisted_keywords is False and link not in self.seen_jobs:
                 try:
-                    job_el = job_tile.find_element(By.CLASS_NAME, 'job-card-list__title')
-                    job_el.click()
-
-                    time.sleep(random.uniform(3, 5))
-
-
-                    try:
-                        done_applying = self.apply_to_job()
-                        if done_applying:
-                            print("Done applying to the job!")
-                        else:
-                            print('Already applied to the job!')
-                    except:
-                        temp = self.file_name
-                        self.file_name = "failed"
-                        print("Failed to apply to job! Please submit a bug report with this link: " + link)
-                        print("Writing to the failed csv file...")
-                        try:
-                            self.write_to_file(company, job_title, link, job_location, location)
-                        except:
-                            pass
-                        self.file_name = temp
-
+                    done_applying = self.apply_to_job()
+                    if done_applying:
+                        print("Done applying to the job!")
+                    else:
+                        print('Already applied to the job!')
+                except:
+                    temp = self.file_name
+                    self.file_name = "failed"
+                    print("Failed to apply to job! Please submit a bug report with this link: " + link)
+                    print("Writing to the failed csv file...")
                     try:
                         self.write_to_file(company, job_title, link, job_location, location)
-                    except Exception:
-                        print("Could not write the job to the file! No special characters in the job title/company is allowed!")
-                        traceback.print_exc()
-                except:
+                    except:
+                        pass
+                    self.file_name = temp
+
+                try:
+                    self.write_to_file(company, job_title, link, job_location, location)
+                except Exception:
+                    print("Could not write the job to the file! No special characters in the job title/company is allowed!")
                     traceback.print_exc()
-                    print("Could not apply to the job!")
-                    pass
-            else:
-                print("Job contains blacklisted keyword or company or poster name!")
-            self.seen_jobs += link
+            except:
+                traceback.print_exc()
+                print("Could not apply to the job!")
+                pass
+
+
+    def extract_job_information(self, job_tile):
+        """
+        Extracts the job information from the job tile.
+        :param job_tile: The job tile element.
+        :return: job_title, company, job_location, link, poster, apply_method
+        """
+        job_title, company, poster, job_location, apply_method, link = "", "", "", "", "", ""
+
+        try:
+            job_title = job_tile.find_element(By.CLASS_NAME, 'job-card-list__title').text
+            link = job_tile.find_element(By.CLASS_NAME, 'job-card-list__title').get_attribute('href').split('?')[0]
+            company = job_tile.find_element(By.CLASS_NAME, 'job-card-container__company-name').text
+        except:
+            pass
+        try:
+            # get the name of the person who posted for the position, if any is listed
+            hiring_line = job_tile.find_element(By.XPATH, '//span[contains(.,\' is hiring for this\')]')
+            hiring_line_text = hiring_line.text
+            name_terminating_index = hiring_line_text.find(' is hiring for this')
+            if name_terminating_index != -1:
+                poster = hiring_line_text[:name_terminating_index]
+        except:
+            pass
+        try:
+            job_location = job_tile.find_element(By.CLASS_NAME, 'job-card-container__metadata-item').text
+        except:
+            pass
+        try:
+            apply_method = job_tile.find_element(By.CLASS_NAME, 'job-card-container__apply-method').text
+        except:
+            pass
+
+        return job_title, company, job_location, link, poster, apply_method
+
+    def is_blacklisted(self, job_title, company, poster, link):
+        """
+        Checks if the job is blacklisted.
+
+        :param job_title:
+        :param company:
+        :param poster:
+        :param link:
+        :return: True if the job is blacklisted, False otherwise.
+        """
+        # TODO: Use GPT to blacklist jobs, it's more accurate than the current method.
+
+        if job_title.lower().split(' ') in [word.lower() for word in self.title_blacklist]:
+            return True
+
+        if company.lower() in [word.lower() for word in self.company_blacklist]:
+            return True
+
+        if poster.lower() in [word.lower() for word in self.poster_blacklist]:
+            return True
+
+        if link in self.seen_jobs:
+            return True
+
+        return False
 
     def apply_to_job(self):
         easy_apply_button = None
