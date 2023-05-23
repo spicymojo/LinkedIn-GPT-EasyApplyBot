@@ -290,9 +290,7 @@ class LinkedinEasyApply:
         # Start the application process
         print("Applying to the job....")
         easy_apply_button.click()           # Click the easy apply button
-
         submitted_application = False       # Flag to check if the application was submitted successfully
-
         while not submitted_application:    # Iterate filling up fields until the submit application button is found
             try:
                 self.fill_up()              # Fill up the fields
@@ -827,40 +825,46 @@ class LinkedinEasyApply:
                         print(e)
 
     def fill_up(self):
+        """
+        Fills up the form with the resume information.
+        """
+        # TODO: Too many try/excepts. Refactor this.
         try:
             easy_apply_content = self.browser.find_element(By.CLASS_NAME, 'jobs-easy-apply-content')
             b4 = easy_apply_content.find_element(By.CLASS_NAME, 'pb4')
             pb4 = easy_apply_content.find_elements(By.CLASS_NAME, 'pb4')
+
             if len(pb4) == 0:
                 raise Exception("No pb4 class elements found in element")
-            if len(pb4) > 0:
-                for pb in pb4:
+
+            for pb in pb4:
+                try:
+                    label = pb.find_element(By.TAG_NAME, 'h3').text.lower()
+
+                    # 1. Fill up the form with the personal info if possible
+                    # TODO: Change to GPT supported? This works really well
+                    if 'home address' in label:
+                        self.home_address(pb)
+                        continue
+
+                    if 'contact info' in label:
+                        self.contact_info()
+                        continue
+
+                    # 2. Fill up the form with the other information
                     try:
-                        label = pb.find_element(By.TAG_NAME, 'h3').text.lower()
-
-                        # 1. Fill up the form with the personal info if possible
-                        if 'home address' in label:
-                            self.home_address(pb)
-                            continue
-
-                        if 'contact info' in label:
-                            self.contact_info()
-                            continue
-
-                        # 2. Fill up the form with the other information
-                        try:
-                            self.additional_questions()
-                        except Exception as e:
-                            pass
-
-                        # 3. Send the resume and cover letter
-                        try:
-                            self.send_resume()
-                        except Exception as e:
-                            pass
-
-                    except:
+                        self.additional_questions()
+                    except Exception as e:
                         pass
+
+                    # 3. Send the resume and cover letter
+                    try:
+                        self.send_resume()
+                    except Exception as e:
+                        pass
+
+                except:
+                    pass
         except:
             pass
 
