@@ -124,6 +124,7 @@ class LinkedinEasyApply:
             no_jobs_text = no_jobs_element.text
         except:
             pass
+
         if 'No matching jobs found' in no_jobs_text:
             raise Exception("No more jobs on this page")
 
@@ -265,42 +266,39 @@ class LinkedinEasyApply:
         return False
 
     def apply_to_job(self):
+        """
+        Applies to the job, opened in the browser.
+        :return: True if successful, False if already applied, raises exception if failed.
+        """
         easy_apply_button = None
 
         try:
             easy_apply_button = self.browser.find_element(By.CLASS_NAME, 'jobs-apply-button')
         except:
+            # If the easy apply button is not found, is because is disabled. Supposedly is because the job is already applied.
+            # There is a pre-filtering before to only search easy apply jobs.
             return False
 
         try:
+            # Scroll down to the job description like a human reading the whole job description
             job_description_area = self.browser.find_element(By.CLASS_NAME, "jobs-search__job-details--container")
             self.scroll_slow(job_description_area, end=1600)
             self.scroll_slow(job_description_area, end=1600, step=400, reverse=True)
         except:
             pass
 
+        # Start the application process
         print("Applying to the job....")
-        easy_apply_button.click()
+        easy_apply_button.click()           # Click the easy apply button
 
-        button_text = ""
-        submit_application_text = 'submit application'
-        while submit_application_text not in button_text.lower():
+        submitted_application = False       # Flag to check if the application was submitted successfully
+
+        while not submitted_application:    # Iterate filling up fields until the submit application button is found
             try:
-                self.fill_up()
-                next_button = self.browser.find_element(By.CLASS_NAME, "artdeco-button--primary")
-                button_text = next_button.text.lower()
-                if submit_application_text in button_text:
-                    try:
-                        self.unfollow()
-                    except:
-                        print("Failed to unfollow company!")
-                time.sleep(random.uniform(1.5, 2.5))
-                next_button.click()
-                time.sleep(random.uniform(3.0, 5.0))
-
-                if 'please enter a valid answer' in self.browser.page_source.lower() or 'file is required' in self.browser.page_source.lower():
-                    raise Exception("Failed answering required questions or uploading required files.")
+                self.fill_up()              # Fill up the fields
+                submitted_application = self.apply_to_job_form_next_step()  # Click the next button after filling up the fields
             except:
+                # On any error, close the application window, save the job for later and raise a final exception.
                 traceback.print_exc()
                 self.browser.find_element(By.CLASS_NAME, 'artdeco-modal__dismiss').click()
                 time.sleep(random.uniform(3, 5))
@@ -308,6 +306,13 @@ class LinkedinEasyApply:
                 time.sleep(random.uniform(3, 5))
                 raise Exception("Failed to apply to job!")
 
+        # Successfully applied to the job, close the confirmation window.
+        self.apply_to_job_form_close_confirmation_modal()
+
+        # Return True if the job was successfully applied to.
+        return True
+
+    def apply_to_job_form_close_confirmation_modal(self):
         closed_notification = False
         time.sleep(random.uniform(3, 5))
         try:
@@ -321,11 +326,41 @@ class LinkedinEasyApply:
         except:
             pass
         time.sleep(random.uniform(3, 5))
-
         if closed_notification is False:
             raise Exception("Could not close the applied confirmation window!")
 
-        return True
+    def apply_to_job_form_next_step(self):
+        """
+        Clicks the next button in the application form / clicks the submit application button.
+        :param submit_application_text:
+        :return: True if the application was submitted, False otherwise.
+        """
+        submit_application_text = 'submit application'
+
+        # Find the next button
+        next_button = self.browser.find_element(By.CLASS_NAME, "artdeco-button--primary")
+        button_text = next_button.text.lower()
+
+        # When the submit application button is found, there is an option to follow the company feed that needs to be unchecked.
+        if submit_application_text in button_text:
+            self.unfollow()
+
+        # Click continuation button
+        # - Next step in the application process
+        # - Submit. This action will also submit the application, if the primary button is the submit application button.
+        time.sleep(random.uniform(1.5, 2.5))
+        next_button.click()
+        time.sleep(random.uniform(3.0, 5.0))
+
+        # There are errors in the current fields
+        if 'please enter a valid answer' in self.browser.page_source.lower() or 'file is required' in self.browser.page_source.lower():
+            # TODO: Provide this feedback to GPT, so it can modify the answers.
+            raise Exception("Failed answering required questions or uploading required files.")
+
+        if submit_application_text in button_text.lower():
+            return True
+
+        return False
 
     def home_address(self, element):
         try:
@@ -730,7 +765,7 @@ class LinkedinEasyApply:
             follow_checkbox = self.browser.find_element(By.XPATH, "//label[contains(.,\'to stay up to date with their page.\')]").click()
             follow_checkbox.click()
         except:
-            pass
+            print("Failed to unfollow company!")
 
     def send_resume(self):
         # TODO: send_resume() is not working
