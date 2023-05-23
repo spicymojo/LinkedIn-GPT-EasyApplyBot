@@ -464,7 +464,7 @@ class LinkedinEasyApply:
         # Answer any other the question
         choice = self.gpt_answerer.answer_question_from_options(question_text, options)
         self.select_dropdown(dropdown_field, choice)
-        self.record_unprepared_question_gpt_answer("dropdown", question_text, choice)
+        self.record_gpt_answer("dropdown", question_text, choice)
 
     def additional_questions_drop_down(self, el):
         question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
@@ -530,7 +530,7 @@ class LinkedinEasyApply:
                     # Ask GPT for an answer, as the resume might reflect the experience
                     answer = self.gpt_answerer.answer_question_from_options(question_text, options)
                     # Record unlisted experience as unprepared questions
-                    self.record_unprepared_question_gpt_answer("dropdown", question_text, answer)
+                    self.record_gpt_answer("dropdown", question_text, answer)
 
                 self.select_dropdown_using_answer(answer, dropdown_field, options)
 
@@ -552,7 +552,7 @@ class LinkedinEasyApply:
             # Let's use GPT to answer the question
             choice = self.gpt_answerer.answer_question_from_options(question_text, options)
             self.select_dropdown(dropdown_field, choice)
-            self.record_unprepared_question_gpt_answer("dropdown", question_text, choice)
+            self.record_gpt_answer("dropdown", question_text, choice)
 
     def select_dropdown_no(self, dropdown_field, options):
         choice = ""
@@ -644,6 +644,9 @@ class LinkedinEasyApply:
         else:
             to_enter = self.gpt_answerer.answer_question_textual(question_text)
 
+        # Record the answer
+        self.record_gpt_answer(text_field_type, question_text, to_enter)
+
         # Enter the answer
         self.enter_text(txt_field, to_enter)
 
@@ -683,7 +686,7 @@ class LinkedinEasyApply:
             if no_of_years is None:
                 # 1. Ask GPT for answer
                 no_of_years = self.gpt_answerer.answer_question_numeric(question_text, default_experience=self.experience_default)
-                self.record_unprepared_question_gpt_answer(text_field_type, question_text, no_of_years)
+                self.record_gpt_answer(text_field_type, question_text, no_of_years)
             to_enter = no_of_years
 
         elif 'grade point average' in question_text:
@@ -716,7 +719,7 @@ class LinkedinEasyApply:
             else:
                 to_enter = self.gpt_answerer.answer_question_textual(question_text)
                 # to_enter = " ‏‏‎ "
-            self.record_unprepared_question_gpt_answer(text_field_type, question_text, to_enter)
+            self.record_gpt_answer(text_field_type, question_text, to_enter)
 
         # - Final check
         # TODO: Try to parse the string to a number if it is numeric
@@ -746,8 +749,7 @@ class LinkedinEasyApply:
         # Ask gpt for the most likely answer
         answer = "yes"
         answer = self.gpt_answerer.answer_question_from_options(radio_text, radio_options)
-        # TODO: Record the answer, renaming the function to record_gpt_answer()
-        self.record_unprepared_question_gpt_answer("radio", radio_text, answer)
+        self.record_gpt_answer("radio", radio_text, answer)
 
         # Select the radio that matches the answer
         to_select = None
@@ -822,7 +824,7 @@ class LinkedinEasyApply:
         else:
             # Ask gpt for the most likely answer
             answer = self.gpt_answerer.answer_question_from_options(radio_text, radio_options)
-            self.record_unprepared_question_gpt_answer("radio", radio_text, answer)
+            self.record_gpt_answer("radio", radio_text, answer)
             # Old way to do it
             # answer = radio_options[len(radio_options) - 1]
             # self.record_unprepared_question("radio", radio_text)
@@ -981,7 +983,7 @@ class LinkedinEasyApply:
             print("Could not write the unprepared question to the file! No special characters in the question is allowed: ")
             print(question_text)
 
-    def record_unprepared_question_gpt_answer(self, answer_type, question_text, gpt_response):
+    def record_gpt_answer(self, answer_type, question_text, gpt_response):
         to_write = [answer_type, question_text, gpt_response]
         file_path = self.unprepared_questions_gpt_file_name + ".csv"
 
