@@ -146,8 +146,7 @@ class LinkedinEasyApply:
 
         # Iterate through each job on the page
         for job_tile in job_list:
-
-            # Extract the job information
+            # Extract the job information from the Tile
             job_title, company, job_location, link, poster, apply_method = self.extract_job_information(job_tile)
             # Check if the job is blacklisted
             is_blacklisted = self.is_blacklisted(job_title, company, poster, link)
@@ -155,42 +154,55 @@ class LinkedinEasyApply:
             self.seen_jobs += link
 
             if is_blacklisted:
-                print("Job contains blacklisted keyword or company or poster name!")
+                print("Job contains blacklisted keyword or company or poster name! Skipping...")
                 continue
 
             try:
+                # Click on the job
                 job_el = job_tile.find_element(By.CLASS_NAME, 'job-card-list__title')
                 job_el.click()
-
-                time.sleep(random.uniform(3, 5))
-
-                try:
-                    done_applying = self.apply_to_job()
-                    if done_applying:
-                        print("Done applying to the job!")
-                    else:
-                        print('Already applied to the job!')
-                except:
-                    temp = self.file_name
-                    self.file_name = "failed"
-                    print("Failed to apply to job! Please submit a bug report with this link: " + link)
-                    print("Writing to the failed csv file...")
-                    try:
-                        self.write_to_file(company, job_title, link, job_location, location)
-                    except:
-                        pass
-                    self.file_name = temp
-
-                try:
-                    self.write_to_file(company, job_title, link, job_location, location)
-                except Exception:
-                    print("Could not write the job to the file! No special characters in the job title/company is allowed!")
-                    traceback.print_exc()
             except:
                 traceback.print_exc()
                 print("Could not apply to the job!")
                 pass
 
+            time.sleep(random.uniform(3, 5))        # Small human-like pause
+
+            try:
+                # Apply to the job
+                if not self.apply_to_job():         # Returns True if successful, false if already applied, raises exception if failed
+                    continue                        # If already applied, next job
+            except:
+                self.record_failed_application(company, job_location, job_title, link, location)
+                continue                            # If failed, next job
+
+            # Record the successful application
+            self.record_successful_application(company, job_location, job_title, link, location)
+
+
+    def record_successful_application(self, company, job_location, job_title, link, location):
+        """
+        Records the successful application to the job in the csv file.
+        """
+        try:
+            self.write_to_file(company, job_title, link, job_location, location)
+        except Exception:
+            print("Could not write the job to the file! No special characters in the job title/company is allowed!")
+            traceback.print_exc()
+
+    def record_failed_application(self, company, job_location, job_title, link, location):
+        """
+        Records the failed application to the job in the csv file.
+        """
+        temp = self.file_name
+        self.file_name = "failed"
+        print("Failed to apply to job! Please submit a bug report with this link: " + link)
+        print("Writing to the failed csv file...")
+        try:
+            self.write_to_file(company, job_title, link, job_location, location)
+        except:
+            pass
+        self.file_name = temp
 
     def extract_job_information(self, job_tile):
         """
