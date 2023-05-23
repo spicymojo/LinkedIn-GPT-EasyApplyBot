@@ -23,8 +23,7 @@ def validate_yaml():
             raise exc
 
     mandatory_params = ['email', 'password', 'disableAntiLock', 'remote', 'experienceLevel', 'jobTypes', 'date',
-                        'positions', 'locations', 'distance', 'outputFileDirectory', 'checkboxes', 'universityGpa',
-                        'languages', 'experience', 'personalInfo', 'eeo', 'uploads']
+                        'positions', 'locations', 'distance', 'outputFileDirectory', 'personalInfo', 'eeo', 'uploads']
 
     for mandatory_param in mandatory_params:
         if mandatory_param not in parameters:

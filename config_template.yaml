@@ -59,7 +59,7 @@ uploads:
  resume: C:\Users\myDirectory\Resume.pdf
  # Cover letter is optional
  #coverLetter: C:\Users\myDirectory\CoverLettter.pdf
- # Plain text resume - preferably on markdown format
+ # Plain text resume - preferably on markdown format, used by GPT
  plainTextResume: C:\Users\myDirectory\PlainTextResume.md
 
 
@@ -98,56 +98,56 @@ checkboxes:
  backgroundCheck: True
 
 # ------------ Additional parameters: universityGpa ---------------
-universityGpa: 4.0
+#universityGpa: 4.0
 
 # ------------ Additional parameters: salaryMinimum ---------------
-salaryMinimum: 106000
+#salaryMinimum: 106000
 
 # ------------ Additional parameters: languages ---------------
-languages:
- english: Native or bilingual # None, Conversational, Professional, Native or bilingual
+#languages:
+# english: Native or bilingual # None, Conversational, Professional, Native or bilingual
 
 # ------------ Additional parameters: years of experience ---------------
 # How many years of work experience do you have ...? (whole numbers only)
-experience:
- # normal ones
- Accounting/Auditing: 0
- Administrative : 0
- Advertising : 0
- Analyst : 0
- Art/Creative: 0
- Business Development: 0
- Consulting: 0
- Customer Service: 0
- Distribution Design: 0
- Education: 0
- Engineering: 0
- Finance: 0
- General Business: 0
- Health Care Provider: 0
- Human Resources: 0
- Information Technology: 0
- Legal: 0
- Management: 0
- Manufacturing: 0
- Marketing: 0
- Public Relations: 0
- Purchasing: 0
- Product Management: 0
- Project Management: 0
- Production: 0
- Quality Assurance: 0
- Research: 0
- Sales: 0
- Science: 0
- Strategy/Planning: 0
- Supply Chain: 0
- Training: 0
- Writing/Editing: 0
- #python: 0
- #selenium: 0
- # default to put for any industry/skill that you did not list
- default: 0
+#experience:
+# # normal ones
+# Accounting/Auditing: 0
+# Administrative : 0
+# Advertising : 0
+# Analyst : 0
+# Art/Creative: 0
+# Business Development: 0
+# Consulting: 0
+# Customer Service: 0
+# Distribution Design: 0
+# Education: 0
+# Engineering: 0
+# Finance: 0
+# General Business: 0
+# Health Care Provider: 0
+# Human Resources: 0
+# Information Technology: 0
+# Legal: 0
+# Management: 0
+# Manufacturing: 0
+# Marketing: 0
+# Public Relations: 0
+# Purchasing: 0
+# Product Management: 0
+# Project Management: 0
+# Production: 0
+# Quality Assurance: 0
+# Research: 0
+# Sales: 0
+# Science: 0
+# Strategy/Planning: 0
+# Supply Chain: 0
+# Training: 0
+# Writing/Editing: 0
+# #python: 0
+# #selenium: 0
+# # default to put for any industry/skill that you did not list
+# default: 0
 
 # ------------ Additional parameters: personal info ---------------
 personalInfo:
