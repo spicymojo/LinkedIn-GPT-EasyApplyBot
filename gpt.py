@@ -4,9 +4,12 @@ from Levenshtein import distance
 
 
 # TODO: Add the personal data to the context.
+# TODO: Add a preprocessor to select better the context: resume, personal data, or cover letter.
 class GPTAnswerer:
-    def __init__(self, resume: str):
+    def __init__(self, resume: str, personal_data: str, cover_letter: str = ""):
         self.resume = resume
+        self.personal_data = personal_data
+        self.cover_letter = cover_letter
         self.llm = OpenAI(model_name="text-davinci-003", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5, max_tokens=-1)
 
     @staticmethod
@@ -35,7 +38,14 @@ class GPTAnswerer:
         Resume: I'm a software engineer with 10 years of experience on both swift and python.
         Question: What is your experience with swift?
         Answer: I have 10 years of experience with swift.
-
+        
+        -----
+        
+        ## Extended personal data:
+        ```
+        {personal_data}
+        ```
+        
         ## Resume:
         ```
         {resume}
@@ -46,9 +56,9 @@ class GPTAnswerer:
         
         ## Answer:"""
 
-        prompt = PromptTemplate(input_variables=["resume", "question"], template=template)          # Define the prompt (template)
-        formatted_prompt = prompt.format_prompt(resume=self.resume, question=question)              # Format the prompt with the data
-        output = self.llm(formatted_prompt.to_string())                                             # Send the prompt to the llm
+        prompt = PromptTemplate(input_variables=["personal_data", "resume", "question"], template=template)                 # Define the prompt (template)
+        formatted_prompt = prompt.format_prompt(personal_data=self.personal_data, resume=self.resume, question=question)    # Format the prompt with the data
+        output = self.llm(formatted_prompt.to_string())                                                                     # Send the prompt to the llm
 
         return output
 
@@ -64,7 +74,14 @@ class GPTAnswerer:
         Resume: I'm a software engineer with 10 years of experience on swift and python.
         Question: How many years of experience do you have on swift?
         Answer: 10
-
+        
+        -----
+        
+        ## Extended personal data:
+        ```
+        {personal_data}
+        ```
+        
         ## Resume:
         ```
         {resume}
@@ -75,8 +92,8 @@ class GPTAnswerer:
         
         ## Answer:"""
 
-        prompt = PromptTemplate(input_variables=["default_experience", "resume", "question"], template=template)                # Define the prompt (template)
-        formatted_prompt = prompt.format_prompt(resume=self.resume, question=question, default_experience=default_experience)   # Format the prompt with the data
+        prompt = PromptTemplate(input_variables=["default_experience", "personal_data", "resume", "question"], template=template)                # Define the prompt (template)
+        formatted_prompt = prompt.format_prompt(personal_data=self.personal_data, resume=self.resume, question=question, default_experience=default_experience)   # Format the prompt with the data
         output_str = self.llm(formatted_prompt.to_string())                 # Send the prompt to the llm
         # Convert to int with error handling
         try:
@@ -101,6 +118,13 @@ class GPTAnswerer:
         Question: How many years of experience do you have on python?
         Options: [1-2, 3-5, 6-10, 10+]
         Answer: 10+
+        
+        -----
+        
+        ## Extended personal data:
+        ```
+        {personal_data}
+        ```
 
         ## Resume:
         ```
@@ -115,8 +139,8 @@ class GPTAnswerer:
         
         ## Answer:"""
 
-        prompt = PromptTemplate(input_variables=["resume", "question", "options"], template=template)                # Define the prompt (template)
-        formatted_prompt = prompt.format_prompt(resume=self.resume, question=question, options=options)   # Format the prompt with the data
+        prompt = PromptTemplate(input_variables=["personal_data" "resume", "question", "options"], template=template)                # Define the prompt (template)
+        formatted_prompt = prompt.format_prompt(personal_data=self.personal_data, resume=self.resume, question=question, options=options)   # Format the prompt with the data
 
         output = self.llm(formatted_prompt.to_string())                 # Send the prompt to the llm
 

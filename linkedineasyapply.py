@@ -25,27 +25,38 @@ class LinkedinEasyApply:
         self.unprepared_questions_file_name = "unprepared_questions"
         self.unprepared_questions_gpt_file_name = "unprepared_questions_gpt_answered"
         self.output_file_directory = parameters['outputFileDirectory']
+
         self.resume_dir = parameters['uploads']['resume']
         if 'coverLetter' in parameters['uploads']:
             self.cover_letter_dir = parameters['uploads']['coverLetter']
         else:
             self.cover_letter_dir = ''
-        self.checkboxes = parameters.get('checkboxes', [])
-        self.university_gpa = parameters['universityGpa']
-        self.salary_minimum = parameters['salaryMinimum']
-        self.languages = parameters.get('languages', [])
-        self.experience = parameters.get('experience', [])
+
+        # self.checkboxes = parameters.get('checkboxes', [])
+        # self.university_gpa = parameters['universityGpa']
+        # self.salary_minimum = parameters['salaryMinimum']
+        # self.languages = parameters.get('languages', [])
+        # self.experience = parameters.get('experience', [])
+        # self.experience_default = self.experience['default']
         self.personal_info = parameters.get('personalInfo', [])
         self.eeo = parameters.get('eeo', [])
-        self.experience_default = self.experience['default']
 
-        # GPT Answerer - for answering questions as fallback
+        # Data to fill in the application using GPT
+        # - Plain text resume
         plain_text_resume_path = parameters['uploads']['plainTextResume']
-        file = open(plain_text_resume_path, "r")       # Read the file
+        file = open(plain_text_resume_path, "r")  # Read the file
         plain_text_resume: str = file.read()
-        self.gpt_answerer = GPTAnswerer(plain_text_resume)
+        # - Plain text personal data
+        plain_text_personal_data_path = parameters['uploads']['plainTextPersonalData']
+        file = open(plain_text_personal_data_path, "r")  # Read the file
+        plain_text_personal_data: str = file.read()
+        # - Plain text cover letter
+        plain_text_cover_letter_path = parameters['uploads']['plainTextCoverLetter']
+        file = open(plain_text_cover_letter_path, "r")  # Read the file
+        plain_text_cover_letter: str = file.read()
+        # - Build the GPT answerer using the plain text data
+        self.gpt_answerer = GPTAnswerer(plain_text_resume, plain_text_personal_data, plain_text_cover_letter)
 
-        # TODO: Add plain text cover letter.
 
     def login(self):
         try:
