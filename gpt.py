@@ -1,14 +1,20 @@
 import os
 from langchain import PromptTemplate, OpenAI
+from langchain.chains.router import MultiPromptChain
+from langchain.chains import ConversationChain
+from langchain.chains.llm import LLMChain
+from langchain.chains.router.llm_router import LLMRouterChain, RouterOutputParser
+from langchain.chains.router.multi_prompt_prompt import MULTI_PROMPT_ROUTER_TEMPLATE
 from Levenshtein import distance
 
 
 # TODO: Add a preprocessor to select better the context: resume, personal data, or cover letter.
 class GPTAnswerer:
-    def __init__(self, resume: str, personal_data: str, cover_letter: str = ""):
+    def __init__(self, resume: str, personal_data: str, cover_letter: str = "", job_description: str = ""):
         self.resume = resume
         self.personal_data = personal_data
         self.cover_letter = cover_letter
+        self.job_description = job_description
         self.llm = OpenAI(model_name="text-davinci-003", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5, max_tokens=-1)
 
     @staticmethod
@@ -25,18 +31,38 @@ class GPTAnswerer:
 
         return key
 
-    def answer_question_textual(self, question: str) -> str:
-        template = """The following is a resume and an answered question about the resume, being answered by the person who's resume it is (first person).
-        ## Rules
-        - Answer the question directly, if possible.
-        - If seems likely that you have the experience based on the resume, even if is not explicit on the resume, answer as if you have the experience.
-        - If you cannot answer the question, answer things like "I have no experience with that, but I learn fast, very fast".
-        - The answer must not be larger than a tweet (140 characters).
+    def summarize(self, text: str) -> str:
+        """
+        Summarizes the text using the OpenAI API.
+        Args:
+            text: The text to summarize.
+        Returns:
+            The summarized text.
+        """
+        pass
 
+    def answer_question_textual_wide_range(self, question: str) -> str:
+        # Can answer questions from the resume, personal data, and cover letter. Deciding which context is relevant. So we don't create a very large prompt concatenating all the data.
+        # Prompt templates:
+        # - Resume stuff + Personal data.
+        # - Cover letter -> personalize to the job description
+        # - Summary -> Resume stuff + Job description (summary)
+
+        # Templates:
+        # - Resume Stuff
+        resume_stuff_template = """
+        The following is a resume, personal data, and an answered question using this information, being answered by the person who's resume it is (first person).
+        
+        ## Rules
+        - Answer questions directly (if possible). eg. "Full Name" -> "John Oliver".
+        - If seems likely that you have the experience, even if is not explicitly defined, answer as if you have the experience.
+        - If you cannot answer the question, answer things like "I have no experience with that, but I learn fast, very fast", "not yet, but I will learn"...
+        - The answer must not be longer than a tweet (140 characters).
+        
         ## Example
         Resume: I'm a software engineer with 10 years of experience on both swift and python.
         Question: What is your experience with swift?
-        Answer: I have 10 years of experience with swift.
+        Answer: 10 years.
         
         -----
         
@@ -49,7 +75,116 @@ class GPTAnswerer:
         ```
         {resume}
         ```
+                
+        ## Question:
+        {question}
+        
+        ## Answer:"""
 
+        # - Cover Letter
+        cover_letter_template = """
+        The following is a cover letter, a job description, and an answered question using this information, being answered by the person who's signing the cover letter (first person).
+        
+        ## Rules
+        - If the question is "cover letter" answer the cover letter, 
+        - Slightly modify the cover letter to personalize it to the job description if needed.
+        - The answer must not be longer than two tweets (280 characters).
+        
+        ## Job Description:
+        ```
+        {job_description}
+        ```
+        
+        ## Cover Letter:
+        ```
+        {cover_letter}
+        ```
+
+        ## Question:
+        {question}
+
+        ## Answer:"""
+
+        # - Summary
+        summary_template = """
+        The following is a resume, a job description, and an answered question using this information, being answered by the person who's resume it is (first person).
+        
+        ## Rules
+        - Answer questions directly.
+        - If seems likely that you have the experience, even if is not explicitly defined, answer as if you have the experience.
+        - Find relations between the job description and the resume, and answer questions about that.
+        """
+
+        prompt_infos = [
+            {
+                "name": "resume",
+                "description": "Good for answering questions about job experience, skills, education, and personal data. Questions like 'experience with python', 'education', 'full name', etc.",
+                "prompt_template": resume_stuff_template
+            },
+            {
+                "name": "cover letter",
+                "description": "Addressing questions about the cover letter and personal characteristics about the role. Questions like 'cover letter', 'why do you want to work here?', etc.",
+                "prompt_template": cover_letter_template
+            },
+            {
+                "name": "summary",
+                "description": "Good for answering questions about the job description, and how I will fit into the company. Questions like, summary of the resume, why I'm a good fit, etc.",
+                "prompt_template": summary_template
+            }
+        ]
+
+        destination_chains = {}
+        for p_info in prompt_infos:
+            name = p_info["name"]
+            prompt_template = p_info["prompt_template"]
+            prompt = PromptTemplate(template=prompt_template, input_variables=["input"])
+            chain = LLMChain(llm=self.llm, prompt=prompt)
+            destination_chains[name] = chain
+        default_chain = ConversationChain(llm=self.llm, output_key="text")
+
+        destinations = [f"{p['name']}: {p['description']}" for p in prompt_infos]
+        destinations_str = "\n".join(destinations)
+        router_template = MULTI_PROMPT_ROUTER_TEMPLATE.format(
+            destinations=destinations_str
+        )
+        router_prompt = PromptTemplate(
+            template=router_template,
+            input_variables=["input"],
+            output_parser=RouterOutputParser(),
+        )
+        router_chain = LLMRouterChain.from_llm(self.llm, router_prompt)
+
+        chain = MultiPromptChain(router_chain=router_chain, destination_chains=destination_chains, default_chain=default_chain, verbose=True)
+
+        return chain.run(question)
+
+    def answer_question_textual(self, question: str) -> str:
+        template = """The following is a resume and an answered question about the resume, being answered by the person who's resume it is (first person).
+        
+        ## Rules
+        - Answer the question directly, if possible.
+        - If seems likely that you have the experience based on the resume, even if is not explicit on the resume, answer as if you have the experience.
+        - If you cannot answer the question, answer things like "I have no experience with that, but I learn fast, very fast", "not yet, but I will learn".
+        - The answer must not be larger than a tweet (140 characters).
+        - Answer questions directly. eg. "Full Name" -> "John Oliver".
+
+        ## Example
+        Resume: I'm a software engineer with 10 years of experience on both swift and python.
+        Question: What is your experience with swift?
+        Answer: 10 years.
+        
+        -----
+        
+        ## Extended personal data:
+        ```
+        {personal_data}
+        ```
+        
+        ## Resume:
+        ```
+        {resume}
+        ```
+                
         ## Question:
         {question}
         
@@ -91,9 +226,9 @@ class GPTAnswerer:
         
         ## Answer:"""
 
-        prompt = PromptTemplate(input_variables=["default_experience", "personal_data", "resume", "question"], template=template)                # Define the prompt (template)
-        formatted_prompt = prompt.format_prompt(personal_data=self.personal_data, resume=self.resume, question=question, default_experience=default_experience)   # Format the prompt with the data
-        output_str = self.llm(formatted_prompt.to_string())                 # Send the prompt to the llm
+        prompt = PromptTemplate(input_variables=["default_experience", "personal_data", "resume", "question"], template=template)                                   # Define the prompt (template)
+        formatted_prompt = prompt.format_prompt(personal_data=self.personal_data, resume=self.resume, question=question, default_experience=default_experience)     # Format the prompt with the data
+        output_str = self.llm(formatted_prompt.to_string())                     # Send the prompt to the llm
         # Convert to int with error handling
         try:
             output = int(output_str)                                            # Convert the output to an integer
