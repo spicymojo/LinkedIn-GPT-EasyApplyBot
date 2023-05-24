@@ -17,6 +17,8 @@ class GPTAnswerer:
         self.job_description = job_description
         self.llm = OpenAI(model_name="text-davinci-003", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5, max_tokens=-1)
 
+        # TODO: Summarize the job description.
+
     @staticmethod
     def openai_api_key():
         """
@@ -31,7 +33,7 @@ class GPTAnswerer:
 
         return key
 
-    def summarize(self, text: str) -> str:
+    def summarize_job_description(self, text: str) -> str:
         """
         Summarizes the text using the OpenAI API.
         Args:
@@ -39,7 +41,21 @@ class GPTAnswerer:
         Returns:
             The summarized text.
         """
-        pass
+        summarize_prompt_template = """
+        Summarize the following job description, removing boilerplate text:
+        
+        ```
+        {text}
+        ```
+        
+        ---
+        
+        Summary:"""
+        prompt = PromptTemplate(input_variables=["text"], template=summarize_prompt_template)       # Define the prompt (template)
+        formatted_prompt = prompt.format_prompt(text=text)                                          # Format the prompt with the data
+        output = self.llm(formatted_prompt.to_string())                                             # Send the prompt to the llm
+
+        return output
 
     def answer_question_textual_wide_range(self, question: str) -> str:
         # Can answer questions from the resume, personal data, and cover letter. Deciding which context is relevant. So we don't create a very large prompt concatenating all the data.
@@ -113,7 +129,21 @@ class GPTAnswerer:
         - Answer questions directly.
         - If seems likely that you have the experience, even if is not explicitly defined, answer as if you have the experience.
         - Find relations between the job description and the resume, and answer questions about that.
-        """
+        
+        ## Job Description:
+        ```
+        {job_description}
+        ```
+        
+        ## Resume:
+        ```
+        {resume}
+        ```
+        
+        ## Question:
+        {question}
+        
+        ## Answer:"""
 
         prompt_infos = [
             {
@@ -137,7 +167,7 @@ class GPTAnswerer:
         for p_info in prompt_infos:
             name = p_info["name"]
             prompt_template = p_info["prompt_template"]
-            prompt = PromptTemplate(template=prompt_template, input_variables=["input"])
+            prompt = PromptTemplate(template=prompt_template, input_variables=["personal_data", "resume", "cover_letter", "job_description", "question"])
             chain = LLMChain(llm=self.llm, prompt=prompt)
             destination_chains[name] = chain
         default_chain = ConversationChain(llm=self.llm, output_key="text")
@@ -149,7 +179,7 @@ class GPTAnswerer:
         )
         router_prompt = PromptTemplate(
             template=router_template,
-            input_variables=["input"],
+            input_variables=["personal_data", "resume", "cover_letter", "job_description", "question"],
             output_parser=RouterOutputParser(),
         )
         router_chain = LLMRouterChain.from_llm(self.llm, router_prompt)
