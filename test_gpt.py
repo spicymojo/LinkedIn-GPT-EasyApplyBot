@@ -88,7 +88,7 @@ class TestGPT(unittest.TestCase):
         question = "What is your phone number?"
         answer = self.answerer.answer_question_textual_wide_range(question)
         print(f"Phone number: {answer}")
-        self.assertEqual(answer, "555-555-5555")
+        self.assertIn("555-555-5555", answer)
 
     def test_answer_question_textual_wide_range_experience(self):
         question = "What is the name of the last company you worked at?"

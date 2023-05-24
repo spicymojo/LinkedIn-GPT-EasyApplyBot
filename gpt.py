@@ -108,10 +108,9 @@ class GPTAnswerer:
         The following is a cover letter, a job description, and an answered question using this information, being answered by the person who's signing the cover letter (first person).
         
         ## Rules
-        - If the question is "cover letter" answer with the cover letter. 
+        - Place holders are defined as [placeholder], replace them with the information provided on the job description.
+        - If the question is "cover letter" answer with the cover letter (replacing the placeholders).
         - You can modify the cover letter to personalize it to the job description, adding things like "I'm very interested in this role because...", the company name, etc.
-        - Only add periods if the answer has multiple sentences/paragraphs.
-        - Replace the tags as [Company] and [Job Title], with the information provided on the job description.
 
         ## Job Description:
         ```
