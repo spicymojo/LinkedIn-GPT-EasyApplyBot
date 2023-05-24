@@ -64,14 +64,18 @@ class TestGPT(unittest.TestCase):
     
     ## Job Description
     - **iOS Developer** 
-    - Company: ZXY Company ltd. 
-    - Location: Anytown, USA
+    - Company: ZXY Incorporated 
+    - Location: Sometown, USA
             
     ## Requirements
     - Proficient in iOS app development using Swift and Objective-C
     - Strong knowledge of iOS frameworks such as UIKit, Core Data, and Core Animation
     - Experience developing iOS apps and working with a team to create an app that was featured in the App Store
     - Word experience is a plus
+    
+    ## Soft Skills
+    - Excellent communication skills
+    - Ability to work in a team from home
     
     Travel up to 25% of the time.
     """
