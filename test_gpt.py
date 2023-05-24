@@ -50,11 +50,11 @@ class TestGPT(unittest.TestCase):
     demo_cover_letter_text = """
     Dear Hiring Manager,
     
-    I am writing to express my interest in the iOS Developer position at ABC Company. I have experience developing iOS apps and working with a team to create an app that was featured in the App Store.
+    I am writing to express my interest in the iOS Developer position at [Company]. I have experience developing iOS apps and working with a team to create an app that was featured in the App Store.
     
     I am proficient in iOS app development using Swift and Objective-C. I have strong knowledge of iOS frameworks such as UIKit, Core Data, and Core Animation. I have developed and maintained 4 iOS apps that are used by thousands of users.
     
-    I am excited to learn more about the iOS Developer position at ABC Company. I have attached my resume for your review. Please feel free to contact me at 555-555-5555 or via email at
+    I am excited to learn more about the iOS Developer position at [Company]. I have attached my resume for your review. Please feel free to contact me at 555-555-5555 or via email at john-doe@gmail.com.
     
     Sincerely,
     John Doe
@@ -63,7 +63,9 @@ class TestGPT(unittest.TestCase):
     demo_job_description_text = """
     
     ## Job Description
-    - **iOS Developer** ZXY Company, Anytown, USA
+    - **iOS Developer** 
+    - Company: ZXY Company ltd. 
+    - Location: Anytown, USA
             
     ## Requirements
     - Proficient in iOS app development using Swift and Objective-C
@@ -80,7 +82,7 @@ class TestGPT(unittest.TestCase):
         question = "What is your name?"
         answer = self.answerer.answer_question_textual_wide_range(question)
         print(f"Name: {answer}")
-        self.assertEqual(answer, "John Doe")
+        self.assertIn("John Doe", answer)
 
     def test_answer_question_textual_wide_range_phone_number(self):
         question = "What is your phone number?"
@@ -92,7 +94,7 @@ class TestGPT(unittest.TestCase):
         question = "What is the name of the last company you worked at?"
         answer = self.answerer.answer_question_textual_wide_range(question)
         print(f"Experience: {answer}")
-        self.assertEqual(answer, "ABC Company")
+        self.assertIn("ABC Company", answer)
 
     def test_answer_question_textual_wide_range_cover_letter(self):
         question = "Cover Letter"

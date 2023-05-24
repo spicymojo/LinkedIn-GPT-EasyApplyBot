@@ -70,15 +70,21 @@ class GPTAnswerer:
         The following is a resume, personal data, and an answered question using this information, being answered by the person who's resume it is (first person).
         
         ## Rules
-        - Answer questions directly (if possible). eg. "Full Name" -> "John Oliver".
-        - If seems likely that you have the experience, even if is not explicitly defined, answer as if you have the experience.
+        - Answer questions directly (if possible)
+        - If seems likely that you have the experience, even if is not explicitly defined, answer as if you have the experience
         - If you cannot answer the question, answer things like "I have no experience with that, but I learn fast, very fast", "not yet, but I will learn"...
-        - The answer must not be longer than a tweet (140 characters).
+        - The answer must not be longer than a tweet (140 characters)
+        - Only add periods if the answer has multiple sentences/paragraphs
         
-        ## Example
+        ## Example 1
         Resume: I'm a software engineer with 10 years of experience on both swift and python.
         Question: What is your experience with swift?
-        Answer: 10 years.
+        Answer: 10 years
+        
+        ## Example 2
+        Resume: Mick Jagger. I'm a software engineer with 4 years of experience on both C++ and python.
+        Question: What is your full name?
+        Answer: Mick Jagger
         
         -----
         
@@ -102,10 +108,11 @@ class GPTAnswerer:
         The following is a cover letter, a job description, and an answered question using this information, being answered by the person who's signing the cover letter (first person).
         
         ## Rules
-        - If the question is "cover letter" answer the cover letter, 
-        - Slightly modify the cover letter to personalize it to the job description if needed.
-        - The answer must not be longer than two tweets (280 characters).
-        
+        - If the question is "cover letter" answer with the cover letter. 
+        - You can modify the cover letter to personalize it to the job description, adding things like "I'm very interested in this role because...", the company name, etc.
+        - Only add periods if the answer has multiple sentences/paragraphs.
+        - Replace the tags as [Company] and [Job Title], with the information provided on the job description.
+
         ## Job Description:
         ```
         {job_description}
@@ -129,6 +136,8 @@ class GPTAnswerer:
         - Answer questions directly.
         - If seems likely that you have the experience, even if is not explicitly defined, answer as if you have the experience.
         - Find relations between the job description and the resume, and answer questions about that.
+        - Only add periods if the answer has multiple sentences/paragraphs.
+
         
         ## Job Description:
         ```
@@ -158,34 +167,37 @@ class GPTAnswerer:
             },
             {
                 "name": "summary",
-                "description": "Good for answering questions about the job description, and how I will fit into the company. Questions like, summary of the resume, why I'm a good fit, etc.",
+                "description": "Good for answering questions about the job description, and how I will fit into the company or the role. Questions like, summary of the resume, why you are a good fit, etc.",
                 "prompt_template": summary_template
             }
         ]
 
-        destination_chains = {}
-
+        # Create the chains, using partials to fill in the data, as the MultiPromptChain does not support more than one input variable.
+        # - Resume Stuff
+        resume_stuff_prompt_template = PromptTemplate(template=resume_stuff_template, input_variables=["personal_data", "resume", "question"])
+        resume_stuff_prompt_template = resume_stuff_prompt_template.partial(personal_data=self.personal_data, resume=self.resume, question=question)
         resume_stuff_chain = LLMChain(
             llm=self.llm,
-            prompt=PromptTemplate(template=resume_stuff_template, input_variables=["personal_data", "resume", "question"])
+            prompt=resume_stuff_prompt_template
         )
-
+        # - Cover Letter
+        cover_letter_prompt_template = PromptTemplate(template=cover_letter_template, input_variables=["cover_letter", "job_description", "question"])
+        cover_letter_prompt_template = cover_letter_prompt_template.partial(cover_letter=self.cover_letter, job_description=self.job_description, question=question)
         cover_letter_chain = LLMChain(
             llm=self.llm,
-            prompt=PromptTemplate(template=cover_letter_template, input_variables=["cover_letter", "job_description", "question"])
+            prompt=cover_letter_prompt_template
         )
-
+        # - Summary
+        summary_prompt_template = PromptTemplate(template=summary_template, input_variables=["resume", "job_description", "question"])
+        summary_prompt_template = summary_prompt_template.partial(resume=self.resume, job_description=self.job_description, question=question)
         summary_chain = LLMChain(
             llm=self.llm,
-            prompt=PromptTemplate(template=summary_template, input_variables=["resume", "job_description", "question"])
+            prompt=summary_prompt_template
         )
 
-        destination_chains["resume"] = resume_stuff_chain
-        destination_chains["cover letter"] = cover_letter_chain
-        destination_chains["summary"] = summary_chain
-
-        default_chain = ConversationChain(llm=self.llm, output_key="text")      # Is it a ConversationChain? Or a LLMChain? Or a MultiPromptChain?
-
+        # Create the router chain
+        destination_chains = {"resume": resume_stuff_chain, "cover letter": cover_letter_chain, "summary": summary_chain}
+        default_chain = ConversationChain(llm=self.llm, output_key="text")  # Is it a ConversationChain? Or a LLMChain? Or a MultiPromptChain?
         destinations = [f"{p['name']}: {p['description']}" for p in prompt_infos]
         destinations_str = "\n".join(destinations)
         router_template = MULTI_PROMPT_ROUTER_TEMPLATE.format(
@@ -204,9 +216,11 @@ class GPTAnswerer:
         # result = chain({"question":question, "personal_data": self.personal_data, "resume": self.resume, "cover_letter": self.cover_letter, "job_description": self.job_description})
         # chain.run()
 
-        result = chain.run({"input": question, "question": question, "personal_data": self.personal_data, "resume": self.resume, "cover_letter": self.cover_letter, "job_description": self.job_description})
+        # result = chain.run({"input": question, "question": question, "personal_data": self.personal_data, "resume": self.resume, "cover_letter": self.cover_letter, "job_description": self.job_description})
 
-        return result
+        result = chain({"input": question})
+
+        return result["text"].strip()
 
     def answer_question_textual(self, question: str) -> str:
         template = """The following is a resume and an answered question about the resume, being answered by the person who's resume it is (first person).
@@ -216,7 +230,7 @@ class GPTAnswerer:
         - If seems likely that you have the experience based on the resume, even if is not explicit on the resume, answer as if you have the experience.
         - If you cannot answer the question, answer things like "I have no experience with that, but I learn fast, very fast", "not yet, but I will learn".
         - The answer must not be larger than a tweet (140 characters).
-        - Answer questions directly. eg. "Full Name" -> "John Oliver".
+        - Answer questions directly. eg. "Full Name" -> "John Oliver", "Experience with python" -> "10 years"
 
         ## Example
         Resume: I'm a software engineer with 10 years of experience on both swift and python.
