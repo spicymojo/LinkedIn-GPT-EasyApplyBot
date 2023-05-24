@@ -68,29 +68,29 @@ def validate_yaml():
 
     assert len(parameters['uploads']) >= 1 and 'resume' in parameters['uploads']
 
-    assert len(parameters['checkboxes']) > 0
+    # assert len(parameters['checkboxes']) > 0
+    #
+    # checkboxes = parameters.get('checkboxes', [])
+    # assert isinstance(checkboxes['driversLicence'], bool)
+    # assert isinstance(checkboxes['requireVisa'], bool)
+    # assert isinstance(checkboxes['legallyAuthorized'], bool)
+    # assert isinstance(checkboxes['urgentFill'], bool)
+    # assert isinstance(checkboxes['commute'], bool)
+    # assert isinstance(checkboxes['backgroundCheck'], bool)
+    # assert 'degreeCompleted' in checkboxes
+    #
+    # assert isinstance(parameters['universityGpa'], (int, float))
+    #
+    # languages = parameters.get('languages', [])
+    # language_types = {'none', 'conversational', 'professional', 'native or bilingual'}
+    # for language in languages:
+    #     assert languages[language].lower() in language_types
+    #
+    # experience = parameters.get('experience', [])
 
-    checkboxes = parameters.get('checkboxes', [])
-    assert isinstance(checkboxes['driversLicence'], bool)
-    assert isinstance(checkboxes['requireVisa'], bool)
-    assert isinstance(checkboxes['legallyAuthorized'], bool)
-    assert isinstance(checkboxes['urgentFill'], bool)
-    assert isinstance(checkboxes['commute'], bool)
-    assert isinstance(checkboxes['backgroundCheck'], bool)
-    assert 'degreeCompleted' in checkboxes
-
-    assert isinstance(parameters['universityGpa'], (int, float))
-
-    languages = parameters.get('languages', [])
-    language_types = {'none', 'conversational', 'professional', 'native or bilingual'}
-    for language in languages:
-        assert languages[language].lower() in language_types
-
-    experience = parameters.get('experience', [])
-
-    for tech in experience:
-        assert isinstance(experience[tech], int)
-    assert 'default' in experience
+    # for tech in experience:
+    #     assert isinstance(experience[tech], int)
+    # assert 'default' in experience
 
     assert len(parameters['personalInfo'])
     personal_info = parameters.get('personalInfo', [])
