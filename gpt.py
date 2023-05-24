@@ -51,9 +51,9 @@ class GPTAnswerer:
         ---
         
         Summary:"""
-        prompt = PromptTemplate(input_variables=["text"], template=summarize_prompt_template)       # Define the prompt (template)
-        formatted_prompt = prompt.format_prompt(text=text)                                          # Format the prompt with the data
-        output = self.llm(formatted_prompt.to_string())                                             # Send the prompt to the llm
+        prompt = PromptTemplate(input_variables=["text"], template=summarize_prompt_template)  # Define the prompt (template)
+        formatted_prompt = prompt.format_prompt(text=text)  # Format the prompt with the data
+        output = self.llm(formatted_prompt.to_string())  # Send the prompt to the llm
 
         return output
 
@@ -164,13 +164,27 @@ class GPTAnswerer:
         ]
 
         destination_chains = {}
-        for p_info in prompt_infos:
-            name = p_info["name"]
-            prompt_template = p_info["prompt_template"]
-            prompt = PromptTemplate(template=prompt_template, input_variables=["personal_data", "resume", "cover_letter", "job_description", "question"])
-            chain = LLMChain(llm=self.llm, prompt=prompt)
-            destination_chains[name] = chain
-        default_chain = ConversationChain(llm=self.llm, output_key="text")
+
+        resume_stuff_chain = LLMChain(
+            llm=self.llm,
+            prompt=PromptTemplate(template=resume_stuff_template, input_variables=["personal_data", "resume", "question"])
+        )
+
+        cover_letter_chain = LLMChain(
+            llm=self.llm,
+            prompt=PromptTemplate(template=cover_letter_template, input_variables=["cover_letter", "job_description", "question"])
+        )
+
+        summary_chain = LLMChain(
+            llm=self.llm,
+            prompt=PromptTemplate(template=summary_template, input_variables=["resume", "job_description", "question"])
+        )
+
+        destination_chains["resume"] = resume_stuff_chain
+        destination_chains["cover letter"] = cover_letter_chain
+        destination_chains["summary"] = summary_chain
+
+        default_chain = ConversationChain(llm=self.llm, output_key="text")      # Is it a ConversationChain? Or a LLMChain? Or a MultiPromptChain?
 
         destinations = [f"{p['name']}: {p['description']}" for p in prompt_infos]
         destinations_str = "\n".join(destinations)
@@ -179,14 +193,20 @@ class GPTAnswerer:
         )
         router_prompt = PromptTemplate(
             template=router_template,
-            input_variables=["personal_data", "resume", "cover_letter", "job_description", "question"],
+            # input_variables=["input", "personal_data", "resume", "cover_letter", "job_description", "question"],
+            input_variables=["input"],
             output_parser=RouterOutputParser(),
         )
         router_chain = LLMRouterChain.from_llm(self.llm, router_prompt)
 
         chain = MultiPromptChain(router_chain=router_chain, destination_chains=destination_chains, default_chain=default_chain, verbose=True)
 
-        return chain.run(question)
+        # result = chain({"question":question, "personal_data": self.personal_data, "resume": self.resume, "cover_letter": self.cover_letter, "job_description": self.job_description})
+        # chain.run()
+
+        result = chain.run({"input": question, "question": question, "personal_data": self.personal_data, "resume": self.resume, "cover_letter": self.cover_letter, "job_description": self.job_description})
+
+        return result
 
     def answer_question_textual(self, question: str) -> str:
         template = """The following is a resume and an answered question about the resume, being answered by the person who's resume it is (first person).
@@ -220,9 +240,9 @@ class GPTAnswerer:
         
         ## Answer:"""
 
-        prompt = PromptTemplate(input_variables=["personal_data", "resume", "question"], template=template)                 # Define the prompt (template)
-        formatted_prompt = prompt.format_prompt(personal_data=self.personal_data, resume=self.resume, question=question)    # Format the prompt with the data
-        output = self.llm(formatted_prompt.to_string())                                                                     # Send the prompt to the llm
+        prompt = PromptTemplate(input_variables=["personal_data", "resume", "question"], template=template)  # Define the prompt (template)
+        formatted_prompt = prompt.format_prompt(personal_data=self.personal_data, resume=self.resume, question=question)  # Format the prompt with the data
+        output = self.llm(formatted_prompt.to_string())  # Send the prompt to the llm
 
         return output
 
@@ -256,14 +276,14 @@ class GPTAnswerer:
         
         ## Answer:"""
 
-        prompt = PromptTemplate(input_variables=["default_experience", "personal_data", "resume", "question"], template=template)                                   # Define the prompt (template)
-        formatted_prompt = prompt.format_prompt(personal_data=self.personal_data, resume=self.resume, question=question, default_experience=default_experience)     # Format the prompt with the data
-        output_str = self.llm(formatted_prompt.to_string())                     # Send the prompt to the llm
+        prompt = PromptTemplate(input_variables=["default_experience", "personal_data", "resume", "question"], template=template)  # Define the prompt (template)
+        formatted_prompt = prompt.format_prompt(personal_data=self.personal_data, resume=self.resume, question=question, default_experience=default_experience)  # Format the prompt with the data
+        output_str = self.llm(formatted_prompt.to_string())  # Send the prompt to the llm
         # Convert to int with error handling
         try:
-            output = int(output_str)                                            # Convert the output to an integer
+            output = int(output_str)  # Convert the output to an integer
         except ValueError:
-            output = default_experience                                         # If the output is not an integer, return the default experience
+            output = default_experience  # If the output is not an integer, return the default experience
             # Print error message
             print(f"Error: The output of the LLM is not an integer number. The default experience ({default_experience}) will be returned instead. The output was: {output_str}")
 
@@ -303,10 +323,10 @@ class GPTAnswerer:
         
         ## Answer:"""
 
-        prompt = PromptTemplate(input_variables=["personal_data" "resume", "question", "options"], template=template)                # Define the prompt (template)
-        formatted_prompt = prompt.format_prompt(personal_data=self.personal_data, resume=self.resume, question=question, options=options)   # Format the prompt with the data
+        prompt = PromptTemplate(input_variables=["personal_data" "resume", "question", "options"], template=template)  # Define the prompt (template)
+        formatted_prompt = prompt.format_prompt(personal_data=self.personal_data, resume=self.resume, question=question, options=options)  # Format the prompt with the data
 
-        output = self.llm(formatted_prompt.to_string())                 # Send the prompt to the llm
+        output = self.llm(formatted_prompt.to_string())  # Send the prompt to the llm
 
         # Guard the output is one of the options
         if output not in options:
