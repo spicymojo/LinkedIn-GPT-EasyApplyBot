@@ -1,6 +1,7 @@
 import unittest
 from gpt import GPTAnswerer
 
+
 class TestGPT(unittest.TestCase):
 
     personal_data_text = """

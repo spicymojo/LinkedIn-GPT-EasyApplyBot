@@ -653,7 +653,7 @@ class LinkedinEasyApply:
         if text_field_type == 'numeric':
             to_enter = self.gpt_answerer.answer_question_numeric(question_text)
         else:
-            to_enter = self.gpt_answerer.answer_question_textual(question_text)
+            to_enter = self.gpt_answerer.answer_question_textual_wide_range(question_text)
 
         # Record the answer
         self.record_gpt_answer(text_field_type, question_text, to_enter)
@@ -728,7 +728,7 @@ class LinkedinEasyApply:
             if text_field_type == 'numeric':
                 to_enter = self.gpt_answerer.answer_question_numeric(question_text)
             else:
-                to_enter = self.gpt_answerer.answer_question_textual(question_text)
+                to_enter = self.gpt_answerer.answer_question_textual_wide_range(question_text)
                 # to_enter = " ‏‏‎ "
             self.record_gpt_answer(text_field_type, question_text, to_enter)
 
