@@ -10,14 +10,28 @@ from Levenshtein import distance
 
 # TODO: Add a preprocessor to select better the context: resume, personal data, or cover letter.
 class GPTAnswerer:
-    def __init__(self, resume: str, personal_data: str, cover_letter: str = "", job_description: str = ""):
+    def __init__(self, resume: str, personal_data: str, cover_letter: str = ""):
+        """
+        Initializes the GPTAnswerer.
+        :param resume: The resume text, preferably in Markdown format.
+        :param personal_data: The personal data text, preferably in Markdown format, following the template, but any text is fine.
+        :param cover_letter: The cover letter text, preferably in Markdown format, use placeholders as [position], [company], etc.
+        """
         self.resume = resume
         self.personal_data = personal_data
         self.cover_letter = cover_letter
-        self.job_description = job_description
+        self._job_description = ""
+        self.job_description_summary = ""
         self.llm = OpenAI(model_name="text-davinci-003", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5, max_tokens=-1)
-        # Computed properties
-        self.job_description_summary = self.summarize_job_description(job_description)
+
+    @property
+    def job_description(self):
+        return self._job_description
+
+    @job_description.setter
+    def job_description(self, value):
+        self._job_description = value
+        self.job_description_summary = self.summarize_job_description(value)
 
     @staticmethod
     def openai_api_key():
@@ -194,7 +208,7 @@ class GPTAnswerer:
         prompt_infos = [
             {
                 "name": "resume",
-                "description": "Good for answering questions about job experience, skills, education, and personal data. Questions like 'experience with python', 'education', 'full name', etc.",
+                "description": "Good for answering questions about job experience, skills, education, and personal data. Questions like 'experience with python', 'education', 'full name', 'social networks', 'links of interest', etc.",
                 "prompt_template": resume_stuff_template
             },
             {

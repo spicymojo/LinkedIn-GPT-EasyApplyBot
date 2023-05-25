@@ -157,7 +157,7 @@ class TestGPT(unittest.TestCase):
     Supportive culture with like-minded techies
     """
 
-    answerer = GPTAnswerer(demo_resume_text, personal_data_text, demo_cover_letter_text, demo_job_description_text)
+    answerer = GPTAnswerer(demo_resume_text, personal_data_text, demo_cover_letter_text)
 
     def test_answer_question_textual_wide_range_name(self):
         question = "What is your name?"
@@ -183,9 +183,9 @@ class TestGPT(unittest.TestCase):
         print(f"Cover letter: {answer}")
 
     def test_summarize_job_description(self):
-        summary = self.answerer.summarize_job_description(self.demo_job_description_real_text)
+        self.answerer.job_description = self.demo_job_description_text
+        summary = self.answerer.job_description_summary     # It's a computed property
         print(f"Summary: \n{summary}")
-        # self.assertIn("iOS Developer", summary)
 
 
 if __name__ == '__main__':

@@ -32,31 +32,24 @@ class LinkedinEasyApply:
         else:
             self.cover_letter_dir = ''
 
-        # self.checkboxes = parameters.get('checkboxes', [])
-        # self.university_gpa = parameters['universityGpa']
-        # self.salary_minimum = parameters['salaryMinimum']
-        # self.languages = parameters.get('languages', [])
-        # self.experience = parameters.get('experience', [])
-        # self.experience_default = self.experience['default']
         self.personal_info = parameters.get('personalInfo', [])
         self.eeo = parameters.get('eeo', [])
 
         # Data to fill in the application using GPT
         # - Plain text resume
         plain_text_resume_path = parameters['uploads']['plainTextResume']
-        file = open(plain_text_resume_path, "r")  # Read the file
+        file = open(plain_text_resume_path, "r")            # Read the file
         plain_text_resume: str = file.read()
         # - Plain text personal data
         plain_text_personal_data_path = parameters['uploads']['plainTextPersonalData']
-        file = open(plain_text_personal_data_path, "r")  # Read the file
+        file = open(plain_text_personal_data_path, "r")     # Read the file
         plain_text_personal_data: str = file.read()
         # - Plain text cover letter
         plain_text_cover_letter_path = parameters['uploads']['plainTextCoverLetter']
-        file = open(plain_text_cover_letter_path, "r")  # Read the file
+        file = open(plain_text_cover_letter_path, "r")      # Read the file
         plain_text_cover_letter: str = file.read()
         # - Build the GPT answerer using the plain text data
         self.gpt_answerer = GPTAnswerer(plain_text_resume, plain_text_personal_data, plain_text_cover_letter)
-
 
     def login(self):
         try:
@@ -159,7 +152,7 @@ class LinkedinEasyApply:
         # Iterate through each job on the page
         for job_tile in job_list:
             # Extract the job information from the Tile
-            job_title, company, job_location, link, poster, apply_method = self.extract_job_information(job_tile)
+            job_title, company, job_location, link, poster, apply_method = self.extract_job_information_from_tile(job_tile)
             # Check if the job is blacklisted
             is_blacklisted = self.is_blacklisted(job_title, company, poster, link)
             # Remember the job
@@ -215,7 +208,7 @@ class LinkedinEasyApply:
             pass
         self.file_name = temp
 
-    def extract_job_information(self, job_tile):
+    def extract_job_information_from_tile(self, job_tile):
         """
         Extracts the job information from the job tile.
         :param job_tile: The job tile element.
@@ -275,6 +268,38 @@ class LinkedinEasyApply:
 
         return False
 
+    def extract_job_information_from_opened_job(self):
+        job_title, company, job_location, description = "", "", "", ""
+
+        try:
+            # Job panel element
+            job_element = self.browser.find_elements(By.CLASS_NAME, 'jobs-search__job-details--container')[0]
+            # Individual information
+            job_title = job_element.find_element(By.CLASS_NAME, 'jobs-unified-top-card__job-title').text
+            company = job_element.find_element(By.CLASS_NAME, 'jobs-unified-top-card__company-name').text
+            job_location = job_element.find_elements(By.CLASS_NAME, 'jobs-unified-top-card__bullet')[0].text + " | " + job_element.find_elements(By.CLASS_NAME, 'jobs-unified-top-card__workplace-type')[0].text
+            description = job_element.find_element(By.CLASS_NAME, 'jobs-description-content__text').text
+        except Exception as e:
+            Exception(f"Could not extract job information from the opened job! {e}")
+
+        return job_title, company, job_location, description
+
+    def formatted_job_information(self, job_title: str, company: str, job_location: str, description: str):
+        """
+        Formats the job information as a markdown string.
+        """
+        job_information = f"""
+        # Job Description
+        ## Job Information 
+        - Position: {job_title}
+        - At: {company}
+        - Location: {job_location}
+        
+        ## Description
+        {description}
+        """
+        return job_information
+
     def apply_to_job(self):
         """
         Applies to the job, opened in the browser.
@@ -296,6 +321,12 @@ class LinkedinEasyApply:
             self.scroll_slow(job_description_area, end=1600, step=400, reverse=True)
         except:
             pass
+
+        # Load the Job description in the answerer
+        job_title, job_company, job_location, job_description = self.extract_job_information_from_opened_job()
+        formatted_description = self.formatted_job_information(job_title, job_company, job_location, job_description)
+        # Provide the job description to the answerer as context
+        self.gpt_answerer.job_description = formatted_description
 
         # Start the application process
         print("Applying to the job....")
