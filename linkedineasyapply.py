@@ -3,6 +3,7 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
+from selenium.webdriver.remote.webelement import WebElement
 from datetime import date
 from itertools import product
 from gpt import GPTAnswerer
@@ -894,8 +895,14 @@ class LinkedinEasyApply:
         except Exception as e:
             print(f"Failed to unfollow company! {e}")
 
-    def send_resume(self):
-        # TODO: send_resume() is not working
+    def is_upload_field(self, element: WebElement) -> bool:
+        try:
+            element.find_element(By.XPATH, ".//input[@type='file']")
+            return True
+        except Exception as e:
+            return False
+
+    def try_send_resume(self):
         try:
             # Resume, cover letter.
             file_upload_elements = self.browser.find_elements(By.XPATH, "//input[@type='file']")
@@ -917,6 +924,7 @@ class LinkedinEasyApply:
 
         except Exception as e:
             print(f"Failed to upload resume or cover letter! {e}")
+
 
     def enter_text(self, element, text):
         element.clear()
@@ -984,24 +992,25 @@ class LinkedinEasyApply:
                     # TODO: Change to GPT supported? This works really well
                     if 'home address' in label:
                         self.home_address(pb)
-                        continue
+                        continue                    # Field is filled up, go to next
 
                     if 'contact info' in label:
                         self.contact_info()
-                        continue
+                        continue                    # Field is filled up, go to next
 
-                    # 2. Fill up the form with the other information
+                    # 2. Send the resume and cover letter
+                    if self.is_upload_field(pb):
+                        try:
+                            self.try_send_resume()
+                            continue                # Field is filled up, go to next
+                        except Exception as e:
+                            pass
+
+                    # 3. Fill up the form with the other information
                     try:
                         self.additional_questions()
                     except Exception as e:
                         pass
-
-                    # 3. Send the resume and cover letter
-                    try:
-                        self.send_resume()
-                    except Exception as e:
-                        pass
-
                 except:
                     pass
         except:
