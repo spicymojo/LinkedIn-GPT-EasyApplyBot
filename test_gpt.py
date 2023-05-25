@@ -84,6 +84,78 @@ class TestGPT(unittest.TestCase):
     Travel up to 25% of the time.
     """
 
+    demo_job_description_real_text = """
+    iOS Developer
+    August  United Kingdom Remote 
+    £60,000/yr - £90,000/yr · Full-time
+    
+    📱iOS Apple Developer (Senior-range)
+
+    🏝 Remote Working - London office
+    
+    🇬🇧 UK Based Applicants Only
+    
+    💵 £60K - £90K+ (DOE - Negotiable further for extraordinary candidates)
+    
+    August is the disruptive platform allowing one to manage all renting needs in one app. Our All-In-One Solution is the first and only platform designed for both Landlords and Tenants, enabling modern, seamless communication, rental payments, e-contracts management, and more.
+    
+    We are unique because…
+    
+    -Open-banking integration, revolutionising rental payment and management.
+    
+    -User experience is our core priority, we want everything to be as pretty as you :-)
+    
+    -Our technology brings real automation, providing huge time savings
+    
+    -A few more things, We’ll tell you more if we like you ;-)
+    
+    👀 We are Looking for…
+    
+    Front-End Apple iOS SwiftUI Developer
+    3+ years Professional Experience developing in Apple
+    Solid understanding of HTTP and WebAPIs with JSON and Swagger
+    Proficient & knowledgeable in designing a mobile experience for variable screen sizes for native iOS using SwiftUI
+    Strong knowledge of Apple design principles, interface guidelines, patterns, and best practices
+    Third party SDKs integration experience eg. Google Firebase, Meta and Facebook SDKs
+    Test driven development TDD, logging and crash reporting experience
+    🏗 To Do…
+    
+    Developing, testing, deploying & maintaining applications - creating elegant Mobile UI/UX apple applications.
+    Working from user stories and tasks
+    Work with back end developers to consume WebAPIs as well as a range of other stakeholders
+    Ability to understand & implement business requirements and translate them into technical requirements
+    Create and understand secure apps and have a disciplined approach to versioning, releases and environments
+    Produce documentation and promote to team
+    Work to improve performance across our technological stack
+    🙋🏻‍♂️ And You…
+    
+    Ideally have demonstrable portfolio of previous App work
+    Keen eye to detail and elegant mobile UI/UX
+    Agile/Scrum way of working and experience, Azure DevOps (ADO) familiarity with repos, pipelines and boards
+    Multi-functional, can-do attitude
+    As a startup willingness to try/suggest new ideas
+    Remote first but meet up occasionally with other team members and the organisation
+    The Boring stuff, Benefits, Blah…
+    
+    🎁Benefits
+    
+    Pret Coffee Subscription
+    Pocket Money, £60 per month (Chocolate, Cigarettes… you decide it's on us!)
+    Company Laptop/ Equipments
+    x2 Get out of Jail free cards (Hangover/Duvet Days)
+    Share Option Scheme
+    Pluralsight subscription or training platform of your choice
+    📝The Details
+    
+    Annual Leave 25 days, rising to 29 days (annually)
+    Pension Scheme
+    Enhanced family friendly policies from day one
+    Remote first with occasional London team meetings requirement or hybrid
+    Training encouraged/career development from day one
+    Regular salary performance/reviews
+    Supportive culture with like-minded techies
+    """
+
     answerer = GPTAnswerer(demo_resume_text, personal_data_text, demo_cover_letter_text, demo_job_description_text)
 
     def test_answer_question_textual_wide_range_name(self):
@@ -108,6 +180,11 @@ class TestGPT(unittest.TestCase):
         question = "Cover Letter"
         answer = self.answerer.answer_question_textual_wide_range(question)
         print(f"Cover letter: {answer}")
+
+    def test_summarize_job_description(self):
+        summary = self.answerer.summarize_job_description(self.demo_job_description_real_text)
+        print(f"Summary: \n{summary}")
+        # self.assertIn("iOS Developer", summary)
 
 
 if __name__ == '__main__':

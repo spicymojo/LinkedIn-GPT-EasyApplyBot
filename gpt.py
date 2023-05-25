@@ -42,18 +42,51 @@ class GPTAnswerer:
             The summarized text.
         """
         summarize_prompt_template = """
-        Summarize the following job description, removing boilerplate text:
+        The following is a summarized job description, following the rules and the template below.
         
+        # Rules
+        - Remove boilerplate text.
+        - Keep only relevant information to match against the resume.
+        - Filling the tables to organize the information.
+        
+        # Summary Template
+        ## About the job
+        | Key      | Value |
+        | -------- | ----- |
+        | Position |       |
+        | Salary   |       |
+        | Location |       |
+        | Company  |       |
+        | [ ... ]  |       |
+
+        ## Requirements
+        | Hard Skills | experience |
+        | ---------------- | ---------- |
+        | [...]            | [...]      |
+        
+        | Soft Skills | experience |
+        | ----------- | ---------- |
+        | [...]       | [...]      |
+          
+        ## More information
+        Excluding parental leave, non cash benefits, policies, culture, etc.
+        - Textual information about the job as a list of bullet points.
+        
+        # Job Description:
         ```
         {text}
         ```
         
         ---
         
-        Summary:"""
+        # Summary"""
         prompt = PromptTemplate(input_variables=["text"], template=summarize_prompt_template)  # Define the prompt (template)
         formatted_prompt = prompt.format_prompt(text=text)  # Format the prompt with the data
         output = self.llm(formatted_prompt.to_string())  # Send the prompt to the llm
+
+        # Remove all spaces after new lines, until no more spaces are found
+        while "\n " in output:
+            output = output.replace("\n ", "\n")
 
         return output
 
