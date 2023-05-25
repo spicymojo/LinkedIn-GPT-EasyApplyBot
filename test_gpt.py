@@ -50,11 +50,15 @@ class TestGPT(unittest.TestCase):
     demo_cover_letter_text = """
     Dear Hiring Manager,
     
-    I am writing to express my interest in the iOS Developer position at [Company]. I have experience developing iOS apps and working with a team to create an app that was featured in the App Store.
+    I am writing to apply for the [position] position at [company]. With a Bachelor of Science in Computer Science and 2 years of experience specializing in iOS app development, I am confident in my ability to contribute to innovative mobile solutions.
     
-    I am proficient in iOS app development using Swift and Objective-C. I have strong knowledge of iOS frameworks such as UIKit, Core Data, and Core Animation. I have developed and maintained 4 iOS apps that are used by thousands of users.
+    I have a strong command of iOS frameworks such as UIKit, Core Data, and Core Animation, and I am proficient in Swift and Objective-C. I have a proven track record of delivering high-quality products, meeting deadlines, and collaborating effectively with cross-functional teams.
     
-    I am excited to learn more about the iOS Developer position at [Company]. I have attached my resume for your review. Please feel free to contact me at 555-555-5555 or via email at john-doe@gmail.com.
+    I am excited to bring my expertise in developing key features and resolving bugs to your team. Projects like SocialConnect and eShop demonstrate my leadership in implementing user authentication, real-time messaging, and push notifications, as well as integrating RESTful APIs and optimizing app performance with Core Data.
+    
+    As an Apple Certified iOS Developer, I stay up-to-date with the latest trends and technologies. I possess excellent problem-solving and communication skills, and I am committed to driving the development of cutting-edge mobile solutions.
+    
+    I am confident that my technical skills and motivation make me an excellent fit for this position. Thank you for considering my application. I have attached my resume and look forward to the opportunity to discuss my qualifications further.
     
     Sincerely,
     John Doe
