@@ -891,29 +891,32 @@ class LinkedinEasyApply:
         try:
             follow_checkbox = self.browser.find_element(By.XPATH, "//label[contains(.,\'to stay up to date with their page.\')]").click()
             follow_checkbox.click()
-        except:
-            print("Failed to unfollow company!")
+        except Exception as e:
+            print(f"Failed to unfollow company! {e}")
 
     def send_resume(self):
         # TODO: send_resume() is not working
         try:
-            file_upload_elements = (By.CSS_SELECTOR, "input[name='file']")
-            if len(self.browser.find_elements(file_upload_elements[0], file_upload_elements[1])) > 0:
-                input_buttons = self.browser.find_elements(file_upload_elements[0], file_upload_elements[1])
-                if len(input_buttons) == 0:
-                    raise Exception("No input elements found in element")
-                for upload_button in input_buttons:
-                    upload_type = upload_button.find_element(By.XPATH, "..").find_element(By.XPATH, "preceding-sibling::*")
-                    if 'resume' in upload_type.text.lower():
-                        upload_button.send_keys(self.resume_dir)
-                    elif 'cover' in upload_type.text.lower():
-                        if self.cover_letter_dir != '':
-                            upload_button.send_keys(self.cover_letter_dir)
-                        elif 'required' in upload_type.text.lower():
-                            upload_button.send_keys(self.resume_dir)
-        except:
-            print("Failed to upload resume or cover letter!")
-            pass
+            # Resume, cover letter.
+            file_upload_elements = self.browser.find_elements(By.XPATH, "//input[@type='file']")
+
+            if len(file_upload_elements) == 0:
+                raise Exception("No file upload elements found")
+
+            for element in file_upload_elements:
+                # Parent of element, this is where the label is (resume, cover letter)
+                parent = element.find_element(By.XPATH, "..")
+                # Remove the class .hidden from the element -> to show the upload button
+                self.browser.execute_script("arguments[0].classList.remove('hidden')", element)
+                # Send the file path to the element -> this will upload the file
+                if 'resume' in parent.text.lower():
+                    element.send_keys(self.resume_dir)
+                elif 'cover' in parent.text.lower() and self.cover_letter_dir != '':
+                    element.send_keys(self.cover_letter_dir)
+                # Got rid of 'required' test - I have never seen a required "something"
+
+        except Exception as e:
+            print(f"Failed to upload resume or cover letter! {e}")
 
     def enter_text(self, element, text):
         element.clear()
