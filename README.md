@@ -25,10 +25,6 @@ _by Jorge Frías_
 - I will keep updating this fork as I use it for my own "educational research".
 - I will add features as I find fun applications, or I require them for my "educational research".
 
-## Setup & Startup
-
-
-
 ## Setup
 
 ### OpenAI API Key
@@ -59,7 +55,6 @@ To run the bot, run the following in the command line:
 ```bash
 python3 main.py
 ```
-
 
 ## Config.yaml Explanations
 Just fill in your email and password for linkedin.
