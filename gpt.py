@@ -361,6 +361,7 @@ class GPTAnswerer:
         - The answer must be one of the options.
         - The answer must exclusively contain one of the options.
         - Answer the option that seems most likely based on the resume.
+        - Never choose the default/placeholder option, examples are: 'Select an option', 'None', 'Choose from the options below', etc.
         
         ## Example
         Resume: I'm a software engineer with 10 years of experience on swift, python, C, C++.
