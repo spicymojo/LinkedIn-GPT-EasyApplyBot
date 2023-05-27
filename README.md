@@ -1,209 +1,65 @@
 # LinkedIn Easy Apply Bot
 Automatically apply to LinkedIn Easy Apply jobs. This bot answers the application questions as well!
 
-This is for educational purposes only. I am not responsible if your LinkedIn account gets suspended or for anything else.
+This is a fork of a fork of the original _LinkedIn Easy Apply Bot_, but it is a very special fork of a fork, this one relies on GPT-3 to answer the questions. 
 
-This bot is written in Python using Selenium.
+
+
+> This is for educational purposes only. I am not responsible if your LinkedIn account gets suspended or for anything else.
+
+This bot is written in Python using Selenium and OpenAI API.
 
 ## Fork Notes
 
-Changes to support open questions using OpenAI api. (This is a work in progress)
+The original bot implementation, couldn't handle open questions, just used keywords and predefined answers. Such couldn't complete a lot of the applications, as any open question or weird selector would make the bot unable to answer.  Now that we have LLM, this is an easy problem to solve, just ask the bot to answer the question, and it will do it.
+
+Another great benefit, is that you can provide way more information to the bot, so it can address truthfully the job requirements, and the questions, just as a human would do. 
+
+I did try to tidy the code a bit, but I didn't want to spend too much time on it, as I just wanted to get it working, so there is still a lot of work to do there.
+
+Thank you for everyone that contributed to the original bot, and all the forks, as made my work way easier.
+
 _by Jorge Frías_
+
+### Future updates
+- I will keep updating this fork as I use it for my own "educational research".
+- I will add features as I find fun applications, or I require them for my "educational research".
 
 ## Setup & Startup
 
-First you need to provide your Open AI API key using environment variable OPEN_AI_API_KEY.
 
+
+## Setup
+
+### OpenAI API Key
+First you need to provide your Open AI API key using environment variable `OPEN_AI_API_KEY`.
+
+### Your information
+Fill out the `config.yaml` file. This contains the information used to search on LinkedIn and fill in your personal information. Most of this is self-explanatory but if you need explanations please see the end of this `README`.
+ > A future update will get rid of most of this and just use the LLM to answer the questions, but for now, you need to provide the information.
+
+You will notice you also have to provide the paths to: 
+- `resume in PDF`. Will be uploaded to LinkedIn when applying.
+- `plain text resume`. Will be used to answer the questions.
+- - `cover letter in PDF` (optional). Will be uploaded to LinkedIn when applying if provided and the job application asks for it.
+- `plain text cover letter`. Will be used when the form ask for a cover letter. When the form ask to write a cover letter (not upload it), the bot will adjust the cover letter to the job description.
+  - You can use placeholders in your cover letter, a placeholder is defined as `[[placeholder]]`, the LLM will look onto the job description to fill in the placeholders. E.g. `[[company]]` will be replaced by the given company name.
+- `personal information`. More information about you, what you want of the job search, work authorization, extended information not covered by the resume, etc. This will be used to answer the questions, and inform other parts of the application. This file doesn't have any structure, will be interpreted by the LLM so fell free to add structure or information as you see fit.
+
+You will find templates for all this files in the `templates` folder.
+
+### Install required libraries
+> You should use a `virtual environment` for this, but it is not required.
 ```bash
-
-To run the bot, open the command line in the cloned repository directory. Activate the virtual environment and start the bot using these commands:
-```bash
-source venv/bin/activate
-python3 main.py
+pip3 install -r requirements.txt
 ```
-
-Next, you need to fill out the config.yaml file. Most of this is self-explanatory but if you need explanations please see the end of this README.
-
-```yaml
-email: email@domain.com
-password: yourpassword
-
-disableAntiLock: False
-
-remote: True
-
-experienceLevel:
- internship: False
- entry: True
- associate: False
- mid-senior level: False
- director: False
- executive: False
-
-jobTypes:
- full-time: True
- contract: True
- part-time: False
- temporary: True
- internship: False
- other: False
- volunteer: False
-
-date:
- all time: True
- month: False
- week: False
- 24 hours: False
-
-positions:
- #- First position
- #- A second position
- #- A third position
- #- ...
-locations:
- #- First location
- #- A second location
- #- A third location
- #- ...
- - Remote
-distance: 25
-
-outputFileDirectory: ~/Documents/Applications/EasyApplyBot/EasyApplyBot/
-
-companyBlacklist:
- #- company
- #- company2
-
-titleBlacklist:
- #- word1
- #- word2
-
-posterBlacklist:
- #- name1
- #- name2
-
-uploads:
- resume: C:\Users\myDirectory\Resume.pdf
- # Cover letter is optional
- #coverLetter: C:\Users\myDirectory\CoverLettter.pdf
-
-
-# ------------ QA section -------------------
-
-# ------------ Additional parameters: checkboxes ---------------
-checkboxes:
- # Do you have a valid driver's license? (yes/no checkbox)
- driversLicence: True
- # Will you now, or in the future, require sponsorship for employment visa status (e.g. H-1B visa status)? (yes/no checkbox)
- # This is relative to the location and your citizenship applying above, and same with legallyAuthorized.
- requireVisa: False
- # Are you legally authorized to work in COUNTRY? (yes/no checkbox)
- legallyAuthorized: True
- # We must fill this position urgently. Can you start immediately? (yes/no checkbox)
- urgentFill: True
- # Are you comfortable commuting to this job's location? (yes/no checkbox)
- commute: False
- # Are you comfortable working in a remote environment? (yes/no checkbox)
- remote: True
- # Are you comfortable taking a drug in accordance with local/state laws? (yes/no checkbox)
- drugTest: True
- # Are you willing to complete an assessment? (yes/no checkbox)
- assessment: True
- # Have you completed the following level of education: DEGREE TYPE? (yes/no checkbox)
- degreeCompleted:
-  - High School Diploma
-  - Bachelor's Degree
-  # - Associate's Degree
-  - Master's Degree
-  # - Master of Business Administration
-  # - Doctor of Philosophy
-  # - Doctor of Medicine
-  # - Doctor of Law
- # Are you willing to undergo a background check, in accordance with local law/regulations?
- backgroundCheck: True
-
-# ------------ Additional parameters: universityGpa ---------------
-universityGpa: 4.0
-
-# ------------ Additional parameters: salaryMinimum ---------------
-salaryMinimum: 106000
-
-# ------------ Additional parameters: languages ---------------
-languages:
- english: Native or bilingual # None, Conversational, Professional, Native or bilingual
-
-# ------------ Additional parameters: years of experience ---------------
-# How many years of work experience do you have ...? (whole numbers only)
-experience:
- # normal ones
- Accounting/Auditing: 0
- Administrative : 0
- Advertising : 0
- Analyst : 0
- Art/Creative: 0
- Business Development: 0
- Consulting: 0
- Customer Service: 0
- Distribution Design: 0
- Education: 0
- Engineering: 0
- Finance: 0
- General Business: 0
- Health Care Provider: 0
- Human Resources: 0
- Information Technology: 0
- Legal: 0
- Management: 0
- Manufacturing: 0
- Marketing: 0
- Public Relations: 0
- Purchasing: 0
- Product Management: 0
- Project Management: 0
- Production: 0
- Quality Assurance: 0
- Research: 0
- Sales: 0
- Science: 0
- Strategy/Planning: 0
- Supply Chain: 0
- Training: 0
- Writing/Editing: 0
- #python: 0
- #selenium: 0
- # default to put for any industry/skill that you did not list
- default: 0
- 
-# ------------ Additional parameters: personal info ---------------
-personalInfo:
- First Name: FirstName
- Last Name: LastName
- Phone Country Code: Canada (+1) # See linkedin for your country code, must be exact
- Mobile Phone Number: 1234567890
- Street address: 123 Fake Street
- City: Red Deer, Alberta # Include the state/province as well!
- State: YourState
- Zip: YourZip/Postal
- Linkedin: https://www.linkedin.com/in/my-linkedin-profile
- Website: https://www.my-website.com # github/website is interchangeable here
-
-# ------------ Additional parameters: USA employment crap ---------------
-eeo:
- gender: None
- race: None
- vetran: None
- disability: None
- citizenship: yes
- clearance: no
-```
-
 
 ## Execute
-
 To run the bot, run the following in the command line:
-```
+```bash
 python3 main.py
 ```
+
 
 ## Config.yaml Explanations
 Just fill in your email and password for linkedin.
@@ -305,113 +161,10 @@ uploads:
  #coverLetter: C:\Users\myDirectory\CoverLettter.pdf
  ```
 
-Answer these questions with regards to the company you are applying to. 
-For the degrees part uncomment which degrees you have, and do not add other ones since the linkedin questions are generic.
-```yaml
-# ------------ Additional parameters: checkboxes ---------------
-checkboxes:
- # Do you have a valid driver's license? (yes/no checkbox)
- driversLicence: True
- # Will you now, or in the future, require sponsorship for employment visa status (e.g. H-1B visa status)? (yes/no checkbox)
- # This is relative to the location and your citizenship applying above, and same with legallyAuthorized.
- requireVisa: False
- # Are you legally authorized to work in COUNTRY? (yes/no checkbox)
- legallyAuthorized: True
- # We must fill this position urgently. Can you start immediately? (yes/no checkbox)
- urgentFill: True
- # Are you comfortable commuting to this job's location? (yes/no checkbox)
- commute: False
- # Are you comfortable working in a remote environment? (yes/no checkbox)
- remote: True
- # Are you comfortable taking a drug in accordance with local/state laws? (yes/no checkbox)
- drugTest: True
- # Are you willing to complete an assessment? (yes/no checkbox)
- assessment: True
- # Have you completed the following level of education: DEGREE TYPE? (yes/no checkbox)
- degreeCompleted:
-  - High School Diploma
-  - Bachelor's Degree
-  #- Associate's Degree
-  #- Master's Degree
-  #- Master of Business Administration
-  #- Doctor of Philosophy
-  #- Doctor of Medicine
-  #- Doctor of Law
- # Are you willing to undergo a background check, in accordance with local law/regulations?
- backgroundCheck: True
- ```
-
-Input your university gpa. Must be a decimal value to one decimal point.
-```yaml
-# ------------ Additional parameters: universityGpa ---------------
-universityGpa: 4.0
- ```
-
-Input your minimum desired salary. Must be an integer (no decimal, comma, or currency symbol).
-```yaml
-# ------------ Additional parameters: salaryMinimum ---------------
-salaryMinimum: 106000
- ```
-
-List all your languages. You must put the proficiency as either: None, Conversational, Professional, Native or bilingual
-```yaml
-# ------------ Additional parameters: languages ---------------
-languages:
- english: Native or bilingual # None, Conversational, Professional, Native or bilingual
- ```
-
-Answer the following question for your experience in industries, tools and technologies. 
-Things like programming languages, frameworks, etc.
-The years of experience must be a whole number.
-Fill in the default for experience you did not list (keep in mind if it's not zero, you will get your application seen more often).
-
-CAVEAT: This is based on keywords in questions. If you put 'R' for experience with the programming language R, this will match all questions with the character 'r'.
-```yaml
-# ------------ Additional parameters: years of experience ---------------
-# How many years of work experience do you have ...? (whole numbers only)
-experience:
- # normal ones
- Accounting/Auditing: 0
- Administrative : 0
- Advertising : 0
- Analyst : 0
- Art/Creative: 0
- Business Development: 0
- Consulting: 0
- Customer Service: 0
- Distribution Design: 0
- Education: 0
- Engineering: 0
- Finance: 0
- General Business: 0
- Health Care Provider: 0
- Human Resources: 0
- Information Technology: 0
- Legal: 0
- Management: 0
- Manufacturing: 0
- Marketing: 0
- Public Relations: 0
- Purchasing: 0
- Product Management: 0
- Project Management: 0
- Production: 0
- Quality Assurance: 0
- Research: 0
- Sales: 0
- Science: 0
- Strategy/Planning: 0
- Supply Chain: 0
- Training: 0
- Writing/Editing: 0
- #python: 0
- #selenium: 0
- # default to put for any industry/skill that you did not list
- default: 0
-  ```
 Input your personal info. Include the state/province in the city name to not get the wrong city when choosing from a dropdown.
 The phone country code needs to be exact for the one that is on linkedin.
 The website is interchangeable for github/portfolio/website.
+> This information should also be provided on `personal_data.md`.
 ```yaml
 # ------------ Additional parameters: personal info ---------------
 personalInfo:
