@@ -192,8 +192,7 @@ eeo:
 ```
 
 ## Troubleshooting
-
-If you are receiving 'file or directory' found errors, create a blank file with the specified name. For example:
+The bot will store all answered questions on `unprepared_questions_gpt_answered.csv`, so you can always check what questions were asked, and what answers were provided, and adjust the personal information files accordingly.
 ```
 touch unprepared_questions.csv
 ```
