@@ -158,8 +158,44 @@ class TestGPT(unittest.TestCase):
     Supportive culture with like-minded techies
     """
 
+    demo_job_description_real_text_summary = """
+    ## Requirements
+| Hard Skills | experience |
+| ---------------- | ---------- |
+| Apple Developer | 3+ years Professional Experience |
+| HTTP and WebAPIs | Solid understanding |
+| SwiftUI | Proficient & knowledgeable |
+| Apple design principles | Strong knowledge |
+| Third party SDKs | Integration experience |
+| TDD | Test driven development |
+| Logging and crash reporting | experience |
+
+| Soft Skills | experience |
+| ----------- | ---------- |
+| Agile/Scrum | Way of working and experience |
+| Azure DevOps | Familiarity with repos, pipelines and boards |
+| Multi-functional | Can-do attitude |
+| Willingness to try/suggest new ideas | |
+
+## More information
+- Developing, testing, deploying & maintaining applications - creating elegant Mobile UI/UX apple applications.
+- Working from user stories and tasks.
+- Work with back end developers to consume WebAPIs as well as a range of other stakeholders.
+- Ability to understand & implement business requirements and translate them into technical requirements.
+- Create and understand secure apps and have a disciplined approach to versioning, releases and environments.
+- Produce documentation and promote to team.
+- Work to improve performance across our technological stack.
+- Ideally have demonstrable portfolio of previous App work.
+- Keen eye to detail and elegant mobile UI/UX.
+- Remote first but meet up occasionally with other team members and the organisation.
+- Benefits include Pret Coffee Subscription, Pocket Money, Company Laptop/ Equipments, Share Option Scheme, Pluralsight subscription or training platform of your choice, Annual Leave 25 days, rising to 29 days, Pension Scheme, Enhanced family friendly policies from day one, Training encouraged/career development from day one, Regular salary performance/reviews, Supportive culture with like-minded techies.
+"""
+
+    # Set up the answerer
     answerer = GPTAnswerer(demo_resume_text, personal_data_text, demo_cover_letter_text)
-    answerer.job_description = demo_job_description_real_text
+    # Use a description resume to test the answerer, so we don't have to wait for the resume summary to be generated
+    answerer.job_description_summary = demo_job_description_real_text_summary
+    # Correct way to do it: answerer.job_description = demo_job_description_real_text
 
     def test_answer_question_textual_wide_range_name(self):
         question = "What is your name?"
@@ -187,6 +223,19 @@ class TestGPT(unittest.TestCase):
     def test_summarize_job_description(self):
         summary = self.answerer.job_description_summary                 # It's a computed property
         print(f"Summary: \n{summary}")
+
+    def test_answer_question_textual(self):
+        question = "What is your name?"
+        answer = self.answerer.answer_question_textual(question)
+        print(f"Name: {answer}")
+        self.assertIn("John Doe", answer)
+
+    def test_answer_question_from_options(self):
+        question = "What is your preferred version control?"
+        options = ["git", "svn", "mercurial"]
+        answer = self.answerer.answer_question_from_options(question, options)
+        print(f"{question}, Options {options}. Answer: {answer}")
+        self.assertIn("git", answer)
 
 
 if __name__ == '__main__':

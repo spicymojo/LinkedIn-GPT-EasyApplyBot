@@ -388,7 +388,7 @@ class GPTAnswerer:
         
         ## Answer:"""
 
-        prompt = PromptTemplate(input_variables=["personal_data" "resume", "question", "options"], template=template)  # Define the prompt (template)
+        prompt = PromptTemplate(input_variables=["personal_data", "resume", "question", "options"], template=template)  # Define the prompt (template)
         formatted_prompt = prompt.format_prompt(personal_data=self.personal_data, resume=self.resume, question=question, options=options)  # Format the prompt with the data
 
         output = self.llm(formatted_prompt.to_string())  # Send the prompt to the llm
