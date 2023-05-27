@@ -495,7 +495,7 @@ class LinkedinEasyApply:
 
     def additional_questions_drop_down_gpt(self, el):
         question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
-        question_text = question.find_element(By.TAG_NAME, 'label').text.lower()
+        question_text = question.find_element(By.TAG_NAME, 'label').text.lower()        # TODO: This seems to be optional, try to answer the question without it, or use the top level title.
         dropdown_field = question.find_element(By.TAG_NAME, 'select')
 
         select = Select(dropdown_field)
