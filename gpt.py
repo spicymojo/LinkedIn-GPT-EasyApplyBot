@@ -1,4 +1,5 @@
 import os
+import re
 from langchain import PromptTemplate, OpenAI
 from langchain.chains.router import MultiPromptChain
 from langchain.chains import ConversationChain
@@ -95,9 +96,9 @@ class GPTAnswerer:
         ---
         
         # Summary"""
-        prompt = PromptTemplate(input_variables=["text"], template=summarize_prompt_template)   # Define the prompt (template)
-        formatted_prompt = prompt.format_prompt(text=text)                                      # Format the prompt with the data
-        output = self.llm(formatted_prompt.to_string())                                         # Send the prompt to the llm
+        prompt = PromptTemplate(input_variables=["text"], template=summarize_prompt_template)  # Define the prompt (template)
+        formatted_prompt = prompt.format_prompt(text=text)  # Format the prompt with the data
+        output = self.llm(formatted_prompt.to_string())  # Send the prompt to the llm
 
         # Remove all spaces after new lines, until no more spaces are found
         while "\n " in output:
@@ -157,12 +158,14 @@ class GPTAnswerer:
 
         # - Cover Letter
         cover_letter_template = """
-        The following is a cover letter, a job description, and an answered question using this information, being answered by the person who's signing the cover letter (first person).
+        The following is a cover letter, a job description, and an answered question using this information, being answered by the person who's signing the cover letter (first person), following the rules below.
         
         ## Rules
-        - Place holders are defined as [placeholder], replace them with the information provided on the job description.
-        - If the question is "cover letter" answer with the cover letter (replacing the placeholders).
-        - You can modify the cover letter to personalize it to the job description, adding things like "I'm very interested in this role because...", the company name, etc.
+        - If the question is "cover letter" answer with the cover letter.
+        - Modify the answer to personalize it to the job description, adding things like "I'm very interested in this role because...", the company name, etc.
+        - Replace all placeholders [[placeholder]], e.g. [[company]], [[position]], etc. With the Job Description information.
+        - No placeholders are left in the answer.
+        - If there is no information to fill in a placeholder, remove the placeholder, and adapt the answer accordingly.
 
         ## Job Description:
         ```
@@ -248,7 +251,7 @@ class GPTAnswerer:
 
         # Create the router chain
         destination_chains = {"resume": resume_stuff_chain, "cover letter": cover_letter_chain, "summary": summary_chain}
-        default_chain = ConversationChain(llm=self.llm, output_key="text")          # Is it a ConversationChain? Or a LLMChain? Or a MultiPromptChain?
+        default_chain = ConversationChain(llm=self.llm, output_key="text")  # Is it a ConversationChain? Or a LLMChain? Or a MultiPromptChain?
         destinations = [f"{p['name']}: {p['description']}" for p in prompt_infos]
         destinations_str = "\n".join(destinations)
         router_template = MULTI_PROMPT_ROUTER_TEMPLATE.format(
@@ -264,8 +267,12 @@ class GPTAnswerer:
         chain = MultiPromptChain(router_chain=router_chain, destination_chains=destination_chains, default_chain=default_chain, verbose=True)
 
         result = chain({"input": question})
+        result_text = result["text"].strip()
 
-        return result["text"].strip()
+        # Sometimes the LLM leaves behind placeholders, we need to remove them
+        result_text = self._remove_placeholders(result_text)
+
+        return result_text
 
     def answer_question_textual(self, question: str) -> str:
         template = """The following is a resume and an answered question about the resume, being answered by the person who's resume it is (first person).
@@ -299,9 +306,9 @@ class GPTAnswerer:
         
         ## Answer:"""
 
-        prompt = PromptTemplate(input_variables=["personal_data", "resume", "question"], template=template)                 # Define the prompt (template)
-        formatted_prompt = prompt.format_prompt(personal_data=self.personal_data, resume=self.resume, question=question)    # Format the prompt with the data
-        output = self.llm(formatted_prompt.to_string())                                                                     # Send the prompt to the llm
+        prompt = PromptTemplate(input_variables=["personal_data", "resume", "question"], template=template)  # Define the prompt (template)
+        formatted_prompt = prompt.format_prompt(personal_data=self.personal_data, resume=self.resume, question=question)  # Format the prompt with the data
+        output = self.llm(formatted_prompt.to_string())  # Send the prompt to the llm
 
         return output
 
@@ -335,14 +342,14 @@ class GPTAnswerer:
         
         ## Answer:"""
 
-        prompt = PromptTemplate(input_variables=["default_experience", "personal_data", "resume", "question"], template=template)                                   # Define the prompt (template)
-        formatted_prompt = prompt.format_prompt(personal_data=self.personal_data, resume=self.resume, question=question, default_experience=default_experience)     # Format the prompt with the data
-        output_str = self.llm(formatted_prompt.to_string())     # Send the prompt to the llm
+        prompt = PromptTemplate(input_variables=["default_experience", "personal_data", "resume", "question"], template=template)  # Define the prompt (template)
+        formatted_prompt = prompt.format_prompt(personal_data=self.personal_data, resume=self.resume, question=question, default_experience=default_experience)  # Format the prompt with the data
+        output_str = self.llm(formatted_prompt.to_string())  # Send the prompt to the llm
         # Convert to int with error handling
         try:
-            output = int(output_str)                            # Convert the output to an integer
+            output = int(output_str)  # Convert the output to an integer
         except ValueError:
-            output = default_experience                         # If the output is not an integer, return the default experience
+            output = default_experience  # If the output is not an integer, return the default experience
             print(f"Error: The output of the LLM is not an integer number. The default experience ({default_experience}) will be returned instead. The output was: {output_str}")
 
         return output
@@ -381,10 +388,10 @@ class GPTAnswerer:
         
         ## Answer:"""
 
-        prompt = PromptTemplate(input_variables=["personal_data" "resume", "question", "options"], template=template)                       # Define the prompt (template)
-        formatted_prompt = prompt.format_prompt(personal_data=self.personal_data, resume=self.resume, question=question, options=options)   # Format the prompt with the data
+        prompt = PromptTemplate(input_variables=["personal_data" "resume", "question", "options"], template=template)  # Define the prompt (template)
+        formatted_prompt = prompt.format_prompt(personal_data=self.personal_data, resume=self.resume, question=question, options=options)  # Format the prompt with the data
 
-        output = self.llm(formatted_prompt.to_string())     # Send the prompt to the llm
+        output = self.llm(formatted_prompt.to_string())  # Send the prompt to the llm
 
         # Guard the output is one of the options
         if output not in options:
@@ -394,3 +401,55 @@ class GPTAnswerer:
             print(f"Error: The output of the LLM is not one of the options. The closest option ({closest_option}) will be returned instead. The output was: {output}, options were: {options}")
 
         return output
+
+    @staticmethod
+    def _contains_placeholder(text: str) -> bool:
+        """
+        Check if the text contains a placeholder. A placeholder is a string like "[placeholder]".
+        """
+        # pattern = r"\[\w+\]"              # Matches "[placeholder]"
+        pattern = r"\[\[([^\]]+)\]\]"       # Matches "[[placeholder]]"
+        match = re.search(pattern, text)
+        return match is not None
+
+    def _remove_placeholders(self, text: str) -> str:
+        """
+        Remove the placeholder from the text, using the llm. The placeholder is a string like "[placeholder]".
+
+        Does nothing if the text does not contain a placeholder.
+        """
+        summarize_prompt_template = """
+        Following are two texts, one with placeholders and one without, the second text uses information from the first text to fill the placeholders.
+        
+        ## Rules
+        - A placeholder is a string like "[[placeholder]]". E.g. "[[company]]", "[[job_title]]", "[[years_of_experience]]"...
+        - The task is to remove the placeholders from the text.
+        - If there is no information to fill a placeholder, remove the placeholder, and adapt the text accordingly.
+        - No placeholders should remain in the text.
+        
+        ## Example
+        Text with placeholders: "I'm a software engineer engineer with 10 years of experience on [placeholder] and [placeholder]."
+        Text without placeholders: "I'm a software engineer with 10 years of experience."
+        
+        -----
+        
+        ## Text with placeholders:
+        {text_with_placeholders}
+        
+        ## Text without placeholders:"""
+
+        result = text
+
+        # Max number of iterations to avoid infinite loops
+        max_iterations = 5
+        concurrent_iterations = 0
+
+        # Remove the placeholder from the text, loop until there are no more placeholders
+        while self._contains_placeholder(result) and concurrent_iterations < max_iterations:
+            prompt = PromptTemplate(input_variables=["text_with_placeholders"], template=summarize_prompt_template)     # Define the prompt (template)
+            formatted_prompt = prompt.format_prompt(text_with_placeholders=result)                                      # Format the prompt with the data
+            output = self.llm(formatted_prompt.to_string())                                                             # Send the prompt to the llm
+            result = output
+            concurrent_iterations += 1
+
+        return result

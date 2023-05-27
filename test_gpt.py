@@ -51,7 +51,7 @@ class TestGPT(unittest.TestCase):
     demo_cover_letter_text = """
     Dear Hiring Manager,
     
-    I am writing to apply for the [position] position at [company]. With a Bachelor of Science in Computer Science and 2 years of experience specializing in iOS app development, I am confident in my ability to contribute to innovative mobile solutions.
+    I am writing to apply for the [[position]] position at [[company]]. With a Bachelor of Science in Computer Science and 2 years of experience specializing in iOS app development, I am confident in my ability to contribute to innovative mobile solutions.
     
     I have a strong command of iOS frameworks such as UIKit, Core Data, and Core Animation, and I am proficient in Swift and Objective-C. I have a proven track record of delivering high-quality products, meeting deadlines, and collaborating effectively with cross-functional teams.
     
@@ -86,8 +86,9 @@ class TestGPT(unittest.TestCase):
     """
 
     demo_job_description_real_text = """
-    iOS Developer
-    August  United Kingdom Remote 
+    Position: iOS Developer
+    Company: August
+    Location: United Kingdom Remote 
     £60,000/yr - £90,000/yr · Full-time
     
     📱iOS Apple Developer (Senior-range)
@@ -158,6 +159,7 @@ class TestGPT(unittest.TestCase):
     """
 
     answerer = GPTAnswerer(demo_resume_text, personal_data_text, demo_cover_letter_text)
+    answerer.job_description = demo_job_description_real_text
 
     def test_answer_question_textual_wide_range_name(self):
         question = "What is your name?"
@@ -183,8 +185,7 @@ class TestGPT(unittest.TestCase):
         print(f"Cover letter: {answer}")
 
     def test_summarize_job_description(self):
-        self.answerer.job_description = self.demo_job_description_text
-        summary = self.answerer.job_description_summary     # It's a computed property
+        summary = self.answerer.job_description_summary                 # It's a computed property
         print(f"Summary: \n{summary}")
 
 

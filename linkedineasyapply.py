@@ -325,6 +325,7 @@ class LinkedinEasyApply:
 
         # Load the Job description in the answerer
         job_title, job_company, job_location, job_description = self.extract_job_information_from_opened_job()
+        # Put all information in a Markdown format to pass to gpt
         formatted_description = self.formatted_job_information(job_title, job_company, job_location, job_description)
         # Provide the job description to the answerer as context
         self.gpt_answerer.job_description = formatted_description
