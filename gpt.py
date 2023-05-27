@@ -414,7 +414,7 @@ class GPTAnswerer:
 
     def _remove_placeholders(self, text: str) -> str:
         """
-        Remove the placeholder from the text, using the llm. The placeholder is a string like "[placeholder]".
+        Remove the placeholder from the text, using the llm. The placeholder is a string like "[[placeholder]]".
 
         Does nothing if the text does not contain a placeholder.
         """
