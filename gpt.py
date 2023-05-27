@@ -1,12 +1,52 @@
 import os
 import re
+from typing import Optional, List, Mapping, Any
+
 from langchain import PromptTemplate, OpenAI
+from langchain.callbacks.manager import CallbackManagerForLLMRun
 from langchain.chains.router import MultiPromptChain
 from langchain.chains import ConversationChain
 from langchain.chains.llm import LLMChain
 from langchain.chains.router.llm_router import LLMRouterChain, RouterOutputParser
 from langchain.chains.router.multi_prompt_prompt import MULTI_PROMPT_ROUTER_TEMPLATE
+from langchain.llms.base import LLM
 from Levenshtein import distance
+
+
+class OpenAILogging(LLM):
+    import langchain
+    llm: langchain.llms.openai.OpenAI
+
+    @property
+    def _llm_type(self) -> str:
+        return "custom"
+
+    def _call(
+        self,
+        prompt: str,
+        stop: Optional[List[str]] = None,
+        run_manager: Optional[CallbackManagerForLLMRun] = None,
+    ) -> str:
+
+        reply = self.llm(prompt)
+        calls_log = os.path.join(os.getcwd(), "open_ai_calls.log")
+        f = open(calls_log, 'a')
+
+        f.write('<request>\n')
+        f.write(prompt)
+        f.write('</request>\n')
+        f.write('<response>\n')
+        f.write(reply)
+        f.write('</response>\n')
+        f.write('\n\n\n')
+        f.close()
+
+        return reply
+    #
+    # @property
+    # def _identifying_params(self) -> Mapping[str, Any]:
+    #     """Get the identifying parameters."""
+    #     return {"n": self.n}
 
 
 # TODO: Add a preprocessor to select better the context: resume, personal data, or cover letter.
@@ -23,7 +63,8 @@ class GPTAnswerer:
         self.cover_letter = cover_letter
         self._job_description = ""
         self.job_description_summary = ""
-        self.llm = OpenAI(model_name="text-davinci-003", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5, max_tokens=-1)
+        llm_base = OpenAI(model_name="text-davinci-003", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5, max_tokens=-1)
+        self.llm = OpenAILogging(llm=llm_base)
 
     @property
     def job_description(self):
@@ -64,6 +105,7 @@ class GPTAnswerer:
         - Keep only relevant information to match against the resume.
         - Filling the tables to organize the information.
         - The data appearing in the tables doesn't appear in the "More information" section.
+        - Ensure the company name is in the summary, as well as the position.
         
         # Summary Template
         ## About the job
