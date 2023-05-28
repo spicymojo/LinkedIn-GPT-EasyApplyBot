@@ -101,13 +101,6 @@ class GPTAnswerer:
         self.cover_letter = cover_letter
         self._job_description = ""
         self.job_description_summary = ""
-        # llm_base = OpenAI(model_name="text-davinci-003", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5, max_tokens=-1)
-        # llm_base = OpenAI(model_name="gpt-3.5-turbo", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5, max_tokens=-1)
-        # llm_base = ChatOpenAI(model_name="gpt-3.5-turbo", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5)
-        # self.llm = OpenAILogging(llm=llm_base)
-        # self.llm = ChatOpenAI(model_name="gpt-3.5-turbo", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5)
-        # self.llm_basic = OpenAI(model_name="text-curie-001", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5)
-        # self.llm_advanced = OpenAI(model_name="text-davinci-003", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5)
 
         # Wrapping the models on a logger to log the requests and responses
         self.llm = LoggerChatModel(llm=ChatOpenAI(model_name="gpt-3.5-turbo", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5))
