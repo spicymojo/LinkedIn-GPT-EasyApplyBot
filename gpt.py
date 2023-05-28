@@ -10,11 +10,38 @@ from langchain.chains import ConversationChain
 from langchain.chains.llm import LLMChain
 from langchain.chains.router.llm_router import LLMRouterChain, RouterOutputParser
 from langchain.chains.router.multi_prompt_prompt import MULTI_PROMPT_ROUTER_TEMPLATE
+from langchain.chat_models.base import BaseChatModel, SimpleChatModel
 from langchain.llms.base import LLM
 from Levenshtein import distance
+from langchain.schema import BaseMessage
 
 
-class OpenAILogging(LLM):
+class LLMLogger:
+    """
+    Logs the requests and responses to a file, to be able to analyze the performance of the model.
+    """
+    def __init__(self, llm: LLM):
+        self.llm = llm
+
+    @staticmethod
+    def log_request(model: str, prompt: str, reply: str):
+
+        calls_log = os.path.join(os.getcwd(), "open_ai_calls.log")
+        f = open(calls_log, 'a')
+
+        f.write(f"<request model='{model}'>\n")
+        f.write(prompt)
+        f.write('\n')
+        f.write('</request>\n')
+        f.write('<response>\n')
+        f.write(reply)
+        f.write('\n')
+        f.write('</response>\n')
+        f.write('\n\n\n')
+        f.close()
+
+
+class LoggerLLMModel(LLM):
     import langchain
     llm: langchain.llms.openai.OpenAI
 
@@ -30,24 +57,30 @@ class OpenAILogging(LLM):
     ) -> str:
 
         reply = self.llm(prompt)
-        calls_log = os.path.join(os.getcwd(), "open_ai_calls.log")
-        f = open(calls_log, 'a')
-
-        f.write('<request>\n')
-        f.write(prompt)
-        f.write('</request>\n')
-        f.write('<response>\n')
-        f.write(reply)
-        f.write('</response>\n')
-        f.write('\n\n\n')
-        f.close()
+        LLMLogger.log_request(self.llm.model_name, prompt, reply)
 
         return reply
-    #
-    # @property
-    # def _identifying_params(self) -> Mapping[str, Any]:
-    #     """Get the identifying parameters."""
-    #     return {"n": self.n}
+
+
+class LoggerChatModel(SimpleChatModel):
+    import langchain
+    llm: langchain.chat_models.openai.ChatOpenAI
+
+    @property
+    def _llm_type(self) -> str:
+        return "custom"
+
+    def _call(
+        self,
+        messages: List[BaseMessage],
+        stop: Optional[List[str]] = None,
+        run_manager: Optional[CallbackManagerForLLMRun] = None,
+    ) -> str:
+
+        reply = self.llm.generate([messages], stop=stop, callbacks=run_manager)
+        LLMLogger.log_request(self.llm.model_name, str(messages), str(reply.generations))
+
+        return reply.generations[0][0].text
 
 
 # TODO: Add a preprocessor to select better the context: resume, personal data, or cover letter.
@@ -68,9 +101,14 @@ class GPTAnswerer:
         # llm_base = OpenAI(model_name="gpt-3.5-turbo", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5, max_tokens=-1)
         # llm_base = ChatOpenAI(model_name="gpt-3.5-turbo", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5)
         # self.llm = OpenAILogging(llm=llm_base)
-        self.llm = ChatOpenAI(model_name="gpt-3.5-turbo", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5)
-        self.llm_basic = OpenAI(model_name="text-curie-001", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5)
-        self.llm_advanced = OpenAI(model_name="text-davinci-003", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5)
+        # self.llm = ChatOpenAI(model_name="gpt-3.5-turbo", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5)
+        # self.llm_basic = OpenAI(model_name="text-curie-001", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5)
+        # self.llm_advanced = OpenAI(model_name="text-davinci-003", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5)
+
+        # Wrapping the models on a logger to log the requests and responses
+        self.llm = LoggerChatModel(llm=ChatOpenAI(model_name="gpt-3.5-turbo", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5))
+        self.llm_basic = LoggerLLMModel(llm=OpenAI(model_name="text-curie-001", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5))
+        self.llm_advanced = LoggerLLMModel(llm=OpenAI(model_name="text-davinci-003", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5))
 
     @property
     def job_description(self):
