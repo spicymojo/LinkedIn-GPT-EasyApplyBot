@@ -69,8 +69,8 @@ class GPTAnswerer:
         # llm_base = ChatOpenAI(model_name="gpt-3.5-turbo", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5)
         # self.llm = OpenAILogging(llm=llm_base)
         self.llm = ChatOpenAI(model_name="gpt-3.5-turbo", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5)
-
-        self.llm_basic = ChatOpenAI(model_name="text-curie-001", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5)
+        self.llm_basic = OpenAI(model_name="text-curie-001", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5)
+        self.llm_advanced = OpenAI(model_name="text-davinci-003", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5)
 
     @property
     def job_description(self):
@@ -284,9 +284,11 @@ class GPTAnswerer:
             input_variables=["input"],
             output_parser=RouterOutputParser(),
         )
-        router_chain = LLMRouterChain.from_llm(self.llm, router_prompt)
 
-        chain = MultiPromptChain(router_chain=router_chain, destination_chains=destination_chains, default_chain=default_chain, verbose=True)
+        # TODO: This is expensive. Test with new models / new versions of langchain.
+        router_chain = LLMRouterChain.from_llm(self.llm_advanced, router_prompt)        # Using the advanced LLM, as is the only one that seems to work with the router chain expected output format.
+
+        chain = MultiPromptChain(router_chain=router_chain, destination_chains=destination_chains, default_chain=resume_stuff_chain, verbose=True)
 
         result = chain({"input": question})
         result_text = result["text"].strip()

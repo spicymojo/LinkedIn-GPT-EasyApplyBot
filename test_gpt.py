@@ -221,7 +221,8 @@ class TestGPT(unittest.TestCase):
         print(f"Cover letter: {answer}")
 
     def test_summarize_job_description(self):
-        summary = self.answerer.job_description_summary                 # It's a computed property
+        # summary = self.answerer.job_description_summary                 # It's a computed property
+        summary = self.answerer.summarize_job_description(self.demo_job_description_real_text)
         print(f"Summary: \n{summary}")
 
     def test_answer_question_textual(self):
