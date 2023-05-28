@@ -449,44 +449,46 @@ class LinkedinEasyApply:
     # MARK: Additional Questions
     def additional_questions(self):
         frm_el = self.browser.find_elements(By.CLASS_NAME, 'jobs-easy-apply-form-section__grouping')
-        if len(frm_el) > 0:
-            for el in frm_el:
-                # Each call will try to do its job, if they can't, they will return early
+        if len(frm_el) == 0:
+            return
 
-                # Radio check
-                try:
-                    # self.additional_questions_radio(el)
-                    self.additional_questions_radio_gpt(el)
-                except Exception as e:
-                    pass
+        for el in frm_el:
+            # Each call will try to do its job, if they can't, they will return early
 
-                # Questions check
-                try:
-                    # self.additional_questions_textbox(el)
-                    self.additional_questions_textbox_gpt(el)
-                except Exception as e:
-                    pass
+            # Radio check
+            try:
+                # self.additional_questions_radio(el)
+                self.additional_questions_radio_gpt(el)
+            except Exception as e:
+                pass
 
-                # Date Check
-                try:
-                    # Works just fine without GPT
-                    self.additional_questions_date(el)
-                except Exception as e:
-                    pass
+            # Questions check
+            try:
+                # self.additional_questions_textbox(el)
+                self.additional_questions_textbox_gpt(el)
+            except Exception as e:
+                pass
 
-                # Dropdown check
-                try:
-                    # self.additional_questions_drop_down(el)
-                    self.additional_questions_drop_down_gpt(el)
-                except Exception as e:
-                    pass
+            # Date Check
+            try:
+                # Works just fine without GPT
+                self.additional_questions_date(el)
+            except Exception as e:
+                pass
 
-                # Checkbox check for agreeing to terms and service
-                try:
-                    # Works just fine without GPT
-                    self.additional_questions_agree_terms_of_service(el)
-                except Exception as e:
-                    pass
+            # Dropdown check
+            try:
+                # self.additional_questions_drop_down(el)
+                self.additional_questions_drop_down_gpt(el)
+            except Exception as e:
+                pass
+
+            # Checkbox check for agreeing to terms and service
+            try:
+                # Works just fine without GPT
+                self.additional_questions_agree_terms_of_service(el)
+            except Exception as e:
+                pass
 
     def additional_questions_agree_terms_of_service(self, el):
         question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
@@ -974,12 +976,11 @@ class LinkedinEasyApply:
 
     def fill_up(self):
         """
-        Fills up the form with the resume information.
+        Fills up the form page with the resume information.
         """
         # TODO: Too many try/excepts. Refactor this.
         try:
             easy_apply_content = self.browser.find_element(By.CLASS_NAME, 'jobs-easy-apply-content')
-            b4 = easy_apply_content.find_element(By.CLASS_NAME, 'pb4')
             pb4 = easy_apply_content.find_elements(By.CLASS_NAME, 'pb4')
 
             if len(pb4) == 0:
