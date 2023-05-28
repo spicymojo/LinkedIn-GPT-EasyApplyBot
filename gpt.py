@@ -3,6 +3,7 @@ import re
 from typing import Optional, List, Mapping, Any
 
 from langchain import PromptTemplate, OpenAI
+from langchain.chat_models import ChatOpenAI
 from langchain.callbacks.manager import CallbackManagerForLLMRun
 from langchain.chains.router import MultiPromptChain
 from langchain.chains import ConversationChain
@@ -63,8 +64,13 @@ class GPTAnswerer:
         self.cover_letter = cover_letter
         self._job_description = ""
         self.job_description_summary = ""
-        llm_base = OpenAI(model_name="text-davinci-003", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5, max_tokens=-1)
-        self.llm = OpenAILogging(llm=llm_base)
+        # llm_base = OpenAI(model_name="text-davinci-003", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5, max_tokens=-1)
+        # llm_base = OpenAI(model_name="gpt-3.5-turbo", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5, max_tokens=-1)
+        # llm_base = ChatOpenAI(model_name="gpt-3.5-turbo", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5)
+        # self.llm = OpenAILogging(llm=llm_base)
+        self.llm = ChatOpenAI(model_name="gpt-3.5-turbo", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5)
+
+        self.llm_basic = ChatOpenAI(model_name="text-curie-001", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5)
 
     @property
     def job_description(self):
@@ -101,35 +107,9 @@ class GPTAnswerer:
         The following is a summarized job description, following the rules and the template below.
         
         # Rules
-        - Remove boilerplate text.
-        - Keep only relevant information to match against the resume.
-        - Filling the tables to organize the information.
-        - The data appearing in the tables doesn't appear in the "More information" section.
-        - Ensure the company name is in the summary, as well as the position.
-        
-        # Summary Template
-        ## About the job
-        | Key      | Value |
-        | -------- | ----- |
-        | Position |       |
-        | Salary   |       |
-        | Location |       |
-        | Company  |       |
-        | [ ... ]  |       |
-
-        ## Requirements
-        | Hard Skills | experience |
-        | ---------------- | ---------- |
-        | [...]            | [...]      |
-        
-        | Soft Skills | experience |
-        | ----------- | ---------- |
-        | [...]       | [...]      |
-          
-        ## More information
-        Excluding parental leave, non cash benefits, policies, culture, etc.
-        - Textual information about the job as a list of bullet points.
-        
+        - Remove boilerplate text
+        - Only relevant information to match the job description against the resume.
+                
         # Job Description:
         ```
         {text}
@@ -137,10 +117,10 @@ class GPTAnswerer:
         
         ---
         
-        # Summary"""
+        # Job Description Summary"""
         prompt = PromptTemplate(input_variables=["text"], template=summarize_prompt_template)  # Define the prompt (template)
-        formatted_prompt = prompt.format_prompt(text=text)  # Format the prompt with the data
-        output = self.llm(formatted_prompt.to_string())  # Send the prompt to the llm
+        chain = LLMChain(llm=self.llm, prompt=prompt)
+        output = chain.run(text=text)
 
         # Remove all spaces after new lines, until no more spaces are found
         while "\n " in output:
@@ -349,8 +329,8 @@ class GPTAnswerer:
         ## Answer:"""
 
         prompt = PromptTemplate(input_variables=["personal_data", "resume", "question"], template=template)  # Define the prompt (template)
-        formatted_prompt = prompt.format_prompt(personal_data=self.personal_data, resume=self.resume, question=question)  # Format the prompt with the data
-        output = self.llm(formatted_prompt.to_string())  # Send the prompt to the llm
+        chain = LLMChain(llm=self.llm, prompt=prompt)
+        output = chain.run(personal_data=self.personal_data, resume=self.resume, question=question)
 
         return output
 
@@ -385,8 +365,9 @@ class GPTAnswerer:
         ## Answer:"""
 
         prompt = PromptTemplate(input_variables=["default_experience", "personal_data", "resume", "question"], template=template)  # Define the prompt (template)
-        formatted_prompt = prompt.format_prompt(personal_data=self.personal_data, resume=self.resume, question=question, default_experience=default_experience)  # Format the prompt with the data
-        output_str = self.llm(formatted_prompt.to_string())  # Send the prompt to the llm
+        chain = LLMChain(llm=self.llm, prompt=prompt)
+        output_str = chain.run(personal_data=self.personal_data, resume=self.resume, question=question, default_experience=default_experience)
+
         # Convert to int with error handling
         try:
             output = int(output_str)  # Convert the output to an integer
@@ -432,9 +413,10 @@ class GPTAnswerer:
         ## Answer:"""
 
         prompt = PromptTemplate(input_variables=["personal_data", "resume", "question", "options"], template=template)  # Define the prompt (template)
-        formatted_prompt = prompt.format_prompt(personal_data=self.personal_data, resume=self.resume, question=question, options=options)  # Format the prompt with the data
-
-        output = self.llm(formatted_prompt.to_string())  # Send the prompt to the llm
+        # formatted_prompt = prompt.format_prompt(personal_data=self.personal_data, resume=self.resume, question=question, options=options)  # Format the prompt with the data
+        # output = self.llm(formatted_prompt.to_string())  # Send the prompt to the llm
+        chain = LLMChain(llm=self.llm, prompt=prompt)
+        output = chain.run(personal_data=self.personal_data, resume=self.resume, question=question, options=options)
 
         # Guard the output is one of the options
         if output not in options:
@@ -490,8 +472,9 @@ class GPTAnswerer:
         # Remove the placeholder from the text, loop until there are no more placeholders
         while self._contains_placeholder(result) and concurrent_iterations < max_iterations:
             prompt = PromptTemplate(input_variables=["text_with_placeholders"], template=summarize_prompt_template)     # Define the prompt (template)
-            formatted_prompt = prompt.format_prompt(text_with_placeholders=result)                                      # Format the prompt with the data
-            output = self.llm(formatted_prompt.to_string())                                                             # Send the prompt to the llm
+            chain = LLMChain(llm=self.llm, prompt=prompt)
+            output = chain.run(text_with_placeholders=result)
+
             result = output
             concurrent_iterations += 1
 
