@@ -1,5 +1,6 @@
 import os
 import re
+from datetime import datetime
 from typing import Optional, List, Mapping, Any
 
 from langchain import PromptTemplate, OpenAI
@@ -29,7 +30,10 @@ class LLMLogger:
         calls_log = os.path.join(os.getcwd(), "open_ai_calls.log")
         f = open(calls_log, 'a')
 
-        f.write(f"<request model='{model}'>\n")
+        # Current time to log
+        time = datetime.now().strftime("%Y/%m/%d %H:%M:%S")
+
+        f.write(f"<request model='{model}' time='{time}'>\n")
         f.write(prompt)
         f.write('\n')
         f.write('</request>\n')
@@ -37,7 +41,7 @@ class LLMLogger:
         f.write(reply)
         f.write('\n')
         f.write('</response>\n')
-        f.write('\n\n\n')
+        f.write('\n\n')
         f.close()
 
 
