@@ -500,7 +500,11 @@ class LinkedinEasyApply:
     def additional_questions_agree_terms_of_service(self, el):
         question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
         clickable_checkbox = question.find_element(By.TAG_NAME, 'label')
-        clickable_checkbox.click()
+
+        # Check if the question text contains the word "agree" and ("terms of service" or "privacy policy")
+        question_text = question.text.lower()
+        if 'agree' in question_text and ('terms of service' in question_text or 'privacy policy' in question_text):
+            clickable_checkbox.click()
 
     def additional_questions_drop_down_gpt(self, el):
         question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
@@ -809,7 +813,7 @@ class LinkedinEasyApply:
         for radio in radios:
             if answer in radio.text.lower():
                 to_select = radio
-
+                break
         # Fallback to the last radio if no answer was found
         if to_select is None:
             to_select = radios[-1]
