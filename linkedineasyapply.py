@@ -7,7 +7,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from datetime import date
 from itertools import product
 from gpt import GPTAnswerer
-
+from pathlib import Path
 
 class LinkedinEasyApply:
     def __init__(self, parameters, driver):
@@ -22,10 +22,9 @@ class LinkedinEasyApply:
         self.locations = parameters.get('locations', [])
         self.base_search_url = self.get_base_search_url(parameters)
         self.seen_jobs = []
-        self.file_name = "output"
         self.unprepared_questions_file_name = "unprepared_questions"
         self.unprepared_questions_gpt_file_name = "unprepared_questions_gpt_answered"
-        self.output_file_directory = parameters['outputFileDirectory']
+        self.output_file_directory = Path(parameters['outputFileDirectory'])
 
         self.resume_dir = parameters['uploads']['resume']
         if 'coverLetter' in parameters['uploads']:
@@ -199,15 +198,12 @@ class LinkedinEasyApply:
         """
         Records the failed application to the job in the csv file.
         """
-        temp = self.file_name
-        self.file_name = "failed"
         print("Failed to apply to job! Please submit a bug report with this link: " + link)
         print("Writing to the failed csv file...")
         try:
-            self.write_to_file(company, job_title, link, job_location, location)
+            self.write_to_file(company, job_title, link, job_location, location, file_name="failed")
         except:
             pass
-        self.file_name = temp
 
     def extract_job_information_from_tile(self, job_tile):
         """
@@ -1018,30 +1014,19 @@ class LinkedinEasyApply:
         except:
             pass
 
-    def write_to_file(self, company, job_title, link, location, search_location):
+    def write_to_file(self, company, job_title, link, location, search_location, file_name='output'):
         to_write = [company, job_title, link, location]
-        #file_path = self.output_file_directory + self.file_name + search_location + ".csv"
-        file_path = self.file_name + search_location + ".csv"
+        file_name = file_name + '_' + search_location + ".csv"
+        file_path = self.output_file_directory / file_name
 
         with open(file_path, 'a') as f:
             writer = csv.writer(f)
             writer.writerow(to_write)
 
-    def record_unprepared_question(self, answer_type, question_text):
-        to_write = [answer_type, question_text]
-        file_path = self.unprepared_questions_file_name + ".csv"
-
-        try:
-            with open(file_path, 'a') as f:
-                writer = csv.writer(f)
-                writer.writerow(to_write)
-        except:
-            print("Could not write the unprepared question to the file! No special characters in the question is allowed: ")
-            print(question_text)
-
     def record_gpt_answer(self, answer_type, question_text, gpt_response):
         to_write = [answer_type, question_text, gpt_response]
-        file_path = self.unprepared_questions_gpt_file_name + ".csv"
+        file_name = "gpt_answers" + ".csv"
+        file_path = self.output_file_directory / file_name
 
         try:
             with open(file_path, 'a') as f:
