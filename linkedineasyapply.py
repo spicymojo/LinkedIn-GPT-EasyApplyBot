@@ -311,6 +311,10 @@ class LinkedinEasyApply:
             # There is a pre-filtering before to only search easy apply jobs.
             return False
 
+        # Skip if the easy apply button says "Continue", this is an application that was already started, but couldn't be finished, and it won't be finished by this script.
+        if easy_apply_button.text == "Continue":
+            return False
+
         try:
             # Scroll down to the job description like a human reading the whole job description
             job_description_area = self.browser.find_element(By.CLASS_NAME, "jobs-search__job-details--container")
