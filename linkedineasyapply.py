@@ -462,6 +462,14 @@ class LinkedinEasyApply:
         for el in frm_el:
             # Each call will try to do its job, if they can't, they will return early
 
+            # Checkbox check for agreeing to terms and service
+            try:
+                # Works just fine without GPT
+                if self.additional_questions_agree_terms_of_service(el):        # If the question is "agree to terms of service", it's resolved -> skip to next question
+                    continue
+            except Exception as e:
+                pass
+
             # Radio check
             try:
                 # self.additional_questions_radio(el)
@@ -490,21 +498,23 @@ class LinkedinEasyApply:
             except Exception as e:
                 pass
 
-            # Checkbox check for agreeing to terms and service
-            try:
-                # Works just fine without GPT
-                self.additional_questions_agree_terms_of_service(el)
-            except Exception as e:
-                pass
 
-    def additional_questions_agree_terms_of_service(self, el):
+    def additional_questions_agree_terms_of_service(self, el) -> bool:
+        """
+        Checks if the question is about agreeing to terms of service and checks the box if it is.
+        :param el:
+        :return: True if the question is about agreeing to terms of service, False otherwise.
+        """
         question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
         clickable_checkbox = question.find_element(By.TAG_NAME, 'label')
 
         # Check if the question text contains the word "agree" and ("terms of service" or "privacy policy")
         question_text = question.text.lower()
-        if 'terms of service' in question_text or 'privacy policy' in question_text:
+        if 'terms of service' in question_text or 'privacy policy' in question_text or 'terms of use' in question_text:
             clickable_checkbox.click()
+            return True
+
+        return False
 
     def additional_questions_drop_down_gpt(self, el):
         question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
