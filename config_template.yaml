@@ -41,7 +41,7 @@ locations:
  - Remote
 distance: 25
 
-outputFileDirectory: ~/Documents/Applications/EasyApplyBot/
+#outputFileDirectory: ~/Documents/Applications/EasyApplyBot/
 
 companyBlacklist:
  #- company
@@ -55,16 +55,16 @@ posterBlacklist:
  #- name1
  #- name2
 
-uploads:
- resume: ~/Documents/Applications/EasyApplyBot/Resume.pdf
- # Cover letter is optional
- #coverLetter: C:\Users\myDirectory\CoverLettter.pdf
- # Plain text resume - preferably on markdown format, used by GPT
- plainTextResume: ~/Documents/Applications/EasyApplyBot/PlainTextResume.md
-
- plainTextCoverLetter: ~/Documents/Applications/EasyApplyBot/PlainTextCoverLetter.md
- # Markdown with personal data, use the template provided in the repository, but you are free to modify it
- plainTextPersonalData: ~/Documents/Applications/EasyApplyBot/PersonalData.md
+#uploads:
+# resume: ~/Documents/Applications/EasyApplyBot/Resume.pdf
+# # Cover letter is optional
+# #coverLetter: C:\Users\myDirectory\CoverLettter.pdf
+# # Plain text resume - preferably on markdown format, used by GPT
+# plainTextResume: ~/Documents/Applications/EasyApplyBot/PlainTextResume.md
+#
+# plainTextCoverLetter: ~/Documents/Applications/EasyApplyBot/PlainTextCoverLetter.md
+# # Markdown with personal data, use the template provided in the repository, but you are free to modify it
+# plainTextPersonalData: ~/Documents/Applications/EasyApplyBot/PersonalData.md
 
 # ------------ QA section -------------------
 
