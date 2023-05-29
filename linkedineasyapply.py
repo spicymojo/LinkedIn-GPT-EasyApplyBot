@@ -503,7 +503,7 @@ class LinkedinEasyApply:
 
         # Check if the question text contains the word "agree" and ("terms of service" or "privacy policy")
         question_text = question.text.lower()
-        if 'agree' in question_text and ('terms of service' in question_text or 'privacy policy' in question_text):
+        if 'terms of service' in question_text or 'privacy policy' in question_text:
             clickable_checkbox.click()
 
     def additional_questions_drop_down_gpt(self, el):
