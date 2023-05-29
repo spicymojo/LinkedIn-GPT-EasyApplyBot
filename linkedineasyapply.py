@@ -390,9 +390,16 @@ class LinkedinEasyApply:
         time.sleep(random.uniform(3.0, 5.0))
 
         # There are errors in the current fields
-        if 'please enter a valid answer' in self.browser.page_source.lower() or 'file is required' in self.browser.page_source.lower():
-            # TODO: Provide this feedback to GPT, so it can modify the answers.
-            raise Exception("Failed answering required questions or uploading required files.")
+        # if 'please enter a valid answer' in self.browser.page_source.lower() or 'file is required' in self.browser.page_source.lower():
+        #     # TODO: Provide this feedback to GPT, so it can modify the answers.
+        #     raise Exception("Failed answering required questions or uploading required files.")
+
+        # There are other errors that can appear, like "Enter a valid phone number", "Enter a whole number", etc.
+        # Represented by the class "artdeco-inline-feedback--error"
+        error_elements = self.browser.find_elements(By.CLASS_NAME, 'artdeco-inline-feedback--error')
+        if len(error_elements) > 0:
+            raise Exception(f"Failed answering required questions or uploading required files. {str([e.text for e in error_elements])}")
+        # TODO: Provide this feedback to GPT, so it can modify the answers, according to the error message.
 
         if submit_application_text in button_text.lower():
             return True
