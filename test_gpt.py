@@ -225,6 +225,10 @@ class TestGPT(unittest.TestCase):
         answer = self.answerer.answer_question_textual_wide_range(question)
         print(f"Cover letter: {answer}")
 
+        question = "Your message to the hiring manager"
+        answer = self.answerer.answer_question_textual_wide_range(question)
+        print(f"Your message to the hiring manager: {answer}")
+
     def test_summarize_job_description(self):
         # summary = self.answerer.job_description_summary                 # It's a computed property
         summary = self.answerer.summarize_job_description(self.demo_job_description_real_text)

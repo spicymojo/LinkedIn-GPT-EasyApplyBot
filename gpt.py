@@ -217,7 +217,7 @@ class GPTAnswerer:
         cover_letter_template = """
         Using the job description provided below, modify the cover letter to personalize it to the job and company. Replace all placeholders [[placeholder]] with the appropriate information from the job description. If there is no information to fill in a placeholder, remove it and adapt the answer accordingly. 
 
-        If the question is "cover letter," answer with the modified cover letter.
+        If the question is "cover letter," answer with the modified cover letter. Do not change the signature name, it's the real name of the person who's resume it is, and who's answering the question (you).
         
         ## Job Description:
         ```
