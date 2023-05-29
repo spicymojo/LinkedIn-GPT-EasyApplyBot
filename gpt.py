@@ -215,15 +215,10 @@ class GPTAnswerer:
 
         # - Cover Letter
         cover_letter_template = """
-        The following is a cover letter, a job description, and an answered question using this information, being answered by the person who's signing the cover letter (first person), following the rules below.
-        
-        ## Rules
-        - If the question is "cover letter" answer with the cover letter.
-        - Modify the answer to personalize it to the job description, adding things like "I'm very interested in this role because...", the company name, etc.
-        - Replace all placeholders [[placeholder]], e.g. [[company]], [[position]], etc. With the Job Description information.
-        - No placeholders are left in the answer.
-        - If there is no information to fill in a placeholder, remove the placeholder, and adapt the answer accordingly.
+        Using the job description provided below, modify the cover letter to personalize it to the job and company. Replace all placeholders [[placeholder]] with the appropriate information from the job description. If there is no information to fill in a placeholder, remove it and adapt the answer accordingly. 
 
+        If the question is "cover letter," answer with the modified cover letter.
+        
         ## Job Description:
         ```
         {job_description}
@@ -233,10 +228,10 @@ class GPTAnswerer:
         ```
         {cover_letter}
         ```
-
+        
         ## Question:
         {question}
-
+        
         ## Answer:"""
 
         # - Summary
