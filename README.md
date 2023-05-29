@@ -1,23 +1,20 @@
-# LinkedIn Easy Apply Bot
-Automatically apply to LinkedIn Easy Apply jobs. This bot answers the application questions as well!
+# LinkedIn GPT
+Automatically apply to _LinkedIn Easy Apply_ jobs. This bot answers the application questions as well!
 
-This is a fork of a fork of the original _LinkedIn Easy Apply Bot_, but it is a very special fork of a fork, this one relies on GPT-3 to answer the questions. 
-
-
+This is a fork of a fork of the original _LinkedIn Easy Apply Bot_, but it is a very special fork of a fork, this one relies on LLMs to answer the questions.
 
 > This is for educational purposes only. I am not responsible if your LinkedIn account gets suspended or for anything else.
 
-This bot is written in Python using Selenium and OpenAI API.
+This bot is written in Python using Selenium and OpenAI.
 
 ## Fork Notes
+The original bot implementation, couldn't handle open questions, just used keywords and predefined answers. Such couldn't complete a lot of the applications, as any open question or weird selector would make the bot unable to answer. Now that we have LLM, this is an easy problem to solve, just ask the bot to answer the question, and it will do it.
 
-The original bot implementation, couldn't handle open questions, just used keywords and predefined answers. Such couldn't complete a lot of the applications, as any open question or weird selector would make the bot unable to answer.  Now that we have LLM, this is an easy problem to solve, just ask the bot to answer the question, and it will do it.
-
-Another great benefit, is that you can provide way more information to the bot, so it can address truthfully the job requirements, and the questions, just as a human would do. 
+Another great benefit, is that you can provide way more information to the bot, so it can address truthfully the job requirements, and the questions, just as you would do. 
 
 I did try to tidy the code a bit, but I didn't want to spend too much time on it, as I just wanted to get it working, so there is still a lot of work to do there.
 
-Thank you for everyone that contributed to the original bot, and all the forks, as made my work way easier.
+Thank you for everyone that contributed to the original bot, and all the forks, made my work way easier.
 
 _by Jorge Frías_
 
