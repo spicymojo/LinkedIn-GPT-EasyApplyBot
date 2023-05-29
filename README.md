@@ -167,3 +167,8 @@ personalInfo:
  Linkedin: https://www.linkedin.com/in/my-linkedin-profile
  Website: https://www.my-website.com # github/website is interchangeable here
 ```
+
+# Known issues
+- The bot not always replaces correctly the placeholders on the cover letter.
+- If any field has problems with the answer, e.g. expected a number and the bot generated a text, the application will not proceed.
+- Usually the first screen asking for contact information also ask for a `summary`, gpt doesn't fill this screen, so the application will not proceed.
