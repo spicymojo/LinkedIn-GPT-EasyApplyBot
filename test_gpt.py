@@ -59,7 +59,7 @@ class TestGPT(unittest.TestCase):
     
     As an Apple Certified iOS Developer, I stay up-to-date with the latest trends and technologies. I possess excellent problem-solving and communication skills, and I am committed to driving the development of cutting-edge mobile solutions.
     
-    I am confident that my technical skills and motivation make me an excellent fit for this position. Thank you for considering my application. I have attached my resume and look forward to the opportunity to discuss my qualifications further.
+    I am confident that my technical skills and motivation make me an excellent fit at [[company]]. Thank you for considering my application. I have attached my resume and look forward to the opportunity to discuss my qualifications further.
     
     Sincerely,
     John Doe
@@ -159,37 +159,42 @@ class TestGPT(unittest.TestCase):
     """
 
     demo_job_description_real_text_summary = """
+    Company: August
+    Location: United Kingdom Remote
+    £60,000/yr - £90,000/yr · Full-time
+    Role: iOS Developer
+    
     ## Requirements
-| Hard Skills | experience |
-| ---------------- | ---------- |
-| Apple Developer | 3+ years Professional Experience |
-| HTTP and WebAPIs | Solid understanding |
-| SwiftUI | Proficient & knowledgeable |
-| Apple design principles | Strong knowledge |
-| Third party SDKs | Integration experience |
-| TDD | Test driven development |
-| Logging and crash reporting | experience |
-
-| Soft Skills | experience |
-| ----------- | ---------- |
-| Agile/Scrum | Way of working and experience |
-| Azure DevOps | Familiarity with repos, pipelines and boards |
-| Multi-functional | Can-do attitude |
-| Willingness to try/suggest new ideas | |
-
-## More information
-- Developing, testing, deploying & maintaining applications - creating elegant Mobile UI/UX apple applications.
-- Working from user stories and tasks.
-- Work with back end developers to consume WebAPIs as well as a range of other stakeholders.
-- Ability to understand & implement business requirements and translate them into technical requirements.
-- Create and understand secure apps and have a disciplined approach to versioning, releases and environments.
-- Produce documentation and promote to team.
-- Work to improve performance across our technological stack.
-- Ideally have demonstrable portfolio of previous App work.
-- Keen eye to detail and elegant mobile UI/UX.
-- Remote first but meet up occasionally with other team members and the organisation.
-- Benefits include Pret Coffee Subscription, Pocket Money, Company Laptop/ Equipments, Share Option Scheme, Pluralsight subscription or training platform of your choice, Annual Leave 25 days, rising to 29 days, Pension Scheme, Enhanced family friendly policies from day one, Training encouraged/career development from day one, Regular salary performance/reviews, Supportive culture with like-minded techies.
-"""
+    | Hard Skills | experience |
+    | ---------------- | ---------- |
+    | Apple Developer | 3+ years Professional Experience |
+    | HTTP and WebAPIs | Solid understanding |
+    | SwiftUI | Proficient & knowledgeable |
+    | Apple design principles | Strong knowledge |
+    | Third party SDKs | Integration experience |
+    | TDD | Test driven development |
+    | Logging and crash reporting | experience |
+    
+    | Soft Skills | experience |
+    | ----------- | ---------- |
+    | Agile/Scrum | Way of working and experience |
+    | Azure DevOps | Familiarity with repos, pipelines and boards |
+    | Multi-functional | Can-do attitude |
+    | Willingness to try/suggest new ideas | |
+    
+    ## More information
+    - Developing, testing, deploying & maintaining applications - creating elegant Mobile UI/UX apple applications.
+    - Working from user stories and tasks.
+    - Work with back end developers to consume WebAPIs as well as a range of other stakeholders.
+    - Ability to understand & implement business requirements and translate them into technical requirements.
+    - Create and understand secure apps and have a disciplined approach to versioning, releases and environments.
+    - Produce documentation and promote to team.
+    - Work to improve performance across our technological stack.
+    - Ideally have demonstrable portfolio of previous App work.
+    - Keen eye to detail and elegant mobile UI/UX.
+    - Remote first but meet up occasionally with other team members and the organisation.
+    - Benefits include Pret Coffee Subscription, Pocket Money, Company Laptop/ Equipments, Share Option Scheme, Pluralsight subscription or training platform of your choice, Annual Leave 25 days, rising to 29 days, Pension Scheme, Enhanced family friendly policies from day one, Training encouraged/career development from day one, Regular salary performance/reviews, Supportive culture with like-minded techies.
+    """
 
     # Set up the answerer
     answerer = GPTAnswerer(demo_resume_text, personal_data_text, demo_cover_letter_text)
