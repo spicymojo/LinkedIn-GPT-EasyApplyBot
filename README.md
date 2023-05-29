@@ -30,19 +30,25 @@ _by Jorge Frías_
 ### OpenAI API Key
 First you need to provide your Open AI API key using environment variable `OPEN_AI_API_KEY`.
 
+> [You can set up the environment variable in your venv](https://stackoverflow.com/a/20918496/8150874)
+
+I recommend to set a [Rate Limit](https://platform.openai.com/account/rate-limits) on your OpenAI account if you plan to leave the bot running for a long time, as it can get expensive quickly. I tried to use the cheapest models possible, but still requires `GPT-3.5-Turbo` to work.
+
 ### Your information
-Fill out the `config.yaml` file. This contains the information used to search on LinkedIn and fill in your personal information. Most of this is self-explanatory but if you need explanations please see the end of this `README`.
- > A future update will get rid of most of this and just use the LLM to answer the questions, but for now, you need to provide the information.
-
-You will notice you also have to provide the paths to: 
-- `resume in PDF`. Will be uploaded to LinkedIn when applying.
-- `plain text resume`. Will be used to answer the questions.
-- - `cover letter in PDF` (optional). Will be uploaded to LinkedIn when applying if provided and the job application asks for it.
-- `plain text cover letter`. Will be used when the form ask for a cover letter. When the form ask to write a cover letter (not upload it), the bot will adjust the cover letter to the job description.
+Your information is provided with a directory containing the following files:
+- `config.yaml`. This file contains the information used to search on LinkedIn and fill in your personal information. Most of this is self-explanatory but if you need explanations please see the end of this `README`.
+- `resume.pdf`. Will be uploaded to LinkedIn when applying.
+- `cover_letter.pdf`. Will be uploaded to LinkedIn when applying if provided and the job application asks for it.
+- `plain_text_resume.md`. Will be used to answer the questions, it's provided in MarkDown format.
+- `plain_text_cover_letter.md`. Will be used when the form ask for a cover letter. When the form ask to write a cover letter (not upload it), the bot will adjust the cover letter to the job description.
   - You can use placeholders in your cover letter, a placeholder is defined as `[[placeholder]]`, the LLM will look onto the job description to fill in the placeholders. E.g. `[[company]]` will be replaced by the given company name.
-- `personal information`. More information about you, what you want of the job search, work authorization, extended information not covered by the resume, etc. This will be used to answer the questions, and inform other parts of the application. This file doesn't have any structure, will be interpreted by the LLM so fell free to add structure or information as you see fit.
+- `personal_data.md`. More information about you, what you want of the job search, work authorization, extended information not covered by the resume, etc. This will be used to answer the questions, and inform other parts of the application. This file doesn't have any structure, will be interpreted by the LLM so fell free to add structure or information as you see fit.
 
-You will find templates for all this files in the `templates` folder.
+> An `output` folder will be created, where you will find all generated answers to the questions.
+
+The folder approach enables you to have multiple configurations (based on locations, roles...), and switch between them easily.
+
+**You will find templates for all this files in the `templates` folder.**
 
 ### Install required libraries
 > You should use a `virtual environment` for this, but it is not required.
@@ -51,9 +57,9 @@ pip3 install -r requirements.txt
 ```
 
 ## Execute
-To run the bot, run the following in the command line:
+To run the bot, run the following in the command line, providing the path to your personal information directory as only argument.
 ```bash
-python3 main.py
+python3 main.py path/to/your/personal/iformation/directory
 ```
 
 ## Config.yaml Explanations
@@ -129,11 +135,6 @@ How far out of the location you want your search to go. You can only input 0, 5,
 distance: 25
  ```
 
-This is the directory where all the job application stats will go to.
-```yaml
-outputFileDirectory: C:\Users\myDirectory\
- ```
-
 A list of companies to not apply to.
 ```yaml
 companyBlacklist:
@@ -146,14 +147,6 @@ A list of words that will be used to skip over jobs with any of these words in t
 titleBlacklist:
  #- word1
  #- word2
- ```
-
-A path to your resume and cover letter.
-```yaml
-uploads:
- resume: C:\Users\myDirectory\Resume.pdf
- # Cover letter is optional
- #coverLetter: C:\Users\myDirectory\CoverLettter.pdf
  ```
 
 Input your personal info. Include the state/province in the city name to not get the wrong city when choosing from a dropdown.
@@ -173,21 +166,4 @@ personalInfo:
  Zip: YourZip/Postal
  Linkedin: https://www.linkedin.com/in/my-linkedin-profile
  Website: https://www.my-website.com # github/website is interchangeable here
-  ```
-This is unused at the moment. For the EEO the bot will try to decline to answer for everything.
-```yaml
-# ------------ Additional parameters: USA employment crap ---------------
-eeo:
- gender: None
- race: None
- vetran: None
- disability: None
- citizenship: yes
- clearance: no
-```
-
-## Troubleshooting
-The bot will store all answered questions on `unprepared_questions_gpt_answered.csv`, so you can always check what questions were asked, and what answers were provided, and adjust the personal information files accordingly.
-```
-touch unprepared_questions.csv
 ```
