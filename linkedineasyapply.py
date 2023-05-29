@@ -461,43 +461,23 @@ class LinkedinEasyApply:
 
         for el in frm_el:
             # Each call will try to do its job, if they can't, they will return early
+            # TODO: return bool indicating if the question was answered or not to continue to the next question
 
             # Checkbox check for agreeing to terms and service
-            try:
-                # Works just fine without GPT
-                if self.additional_questions_agree_terms_of_service(el):        # If the question is "agree to terms of service", it's resolved -> skip to next question
-                    continue
-            except Exception as e:
-                pass
+            if self.additional_questions_agree_terms_of_service(el):        # If the question is "agree to terms of service", it's resolved -> skip to next question
+                continue
 
             # Radio check
-            try:
-                # self.additional_questions_radio(el)
-                self.additional_questions_radio_gpt(el)
-            except Exception as e:
-                pass
+            self.additional_questions_radio_gpt(el)
 
             # Questions check
-            try:
-                # self.additional_questions_textbox(el)
-                self.additional_questions_textbox_gpt(el)
-            except Exception as e:
-                pass
+            self.additional_questions_textbox_gpt(el)
 
             # Date Check
-            try:
-                # Works just fine without GPT
-                self.additional_questions_date(el)
-            except Exception as e:
-                pass
+            self.additional_questions_date(el)
 
             # Dropdown check
-            try:
-                # self.additional_questions_drop_down(el)
-                self.additional_questions_drop_down_gpt(el)
-            except Exception as e:
-                pass
-
+            self.additional_questions_drop_down_gpt(el)
 
     def additional_questions_agree_terms_of_service(self, el) -> bool:
         """
@@ -505,33 +485,40 @@ class LinkedinEasyApply:
         :param el:
         :return: True if the question is about agreeing to terms of service, False otherwise.
         """
-        question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
-        clickable_checkbox = question.find_element(By.TAG_NAME, 'label')
+        try:
+            question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
+            clickable_checkbox = question.find_element(By.TAG_NAME, 'label')
 
-        # Check if the question text contains the word "agree" and ("terms of service" or "privacy policy")
-        question_text = question.text.lower()
-        if 'terms of service' in question_text or 'privacy policy' in question_text or 'terms of use' in question_text:
-            clickable_checkbox.click()
-            return True
+            # Check if the question text contains the word "agree" and ("terms of service" or "privacy policy")
+            question_text = question.text.lower()
+            if 'terms of service' in question_text or 'privacy policy' in question_text or 'terms of use' in question_text:
+                clickable_checkbox.click()
+                return True
+        except Exception as e:
+            pass
 
         return False
 
     def additional_questions_drop_down_gpt(self, el):
-        question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
-        question_text = question.find_element(By.TAG_NAME, 'label').text.lower()        # TODO: This seems to be optional, try to answer the question without it, or use the top level title.
-        dropdown_field = question.find_element(By.TAG_NAME, 'select')
+        try:
+            question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
+            question_text = question.find_element(By.TAG_NAME, 'label').text.lower()        # TODO: This seems to be optional, try to answer the question without it, or use the top level title.
+            dropdown_field = question.find_element(By.TAG_NAME, 'select')
 
-        select = Select(dropdown_field)
-        options = [options.text for options in select.options]
+            select = Select(dropdown_field)
+            options = [options.text for options in select.options]
 
-        # Hardcoded answers
-        if 'email' in question_text:
-            return  # assume email address is filled in properly by default
+            # Hardcoded answers
+            if 'email' in question_text:
+                return  # assume email address is filled in properly by default
 
-        # Answer any other the question
-        choice = self.gpt_answerer.answer_question_from_options(question_text, options)
-        self.select_dropdown(dropdown_field, choice)
-        self.record_gpt_answer("dropdown", question_text, choice)
+            # Answer any other the question
+            choice = self.gpt_answerer.answer_question_from_options(question_text, options)
+            self.select_dropdown(dropdown_field, choice)
+            self.record_gpt_answer("dropdown", question_text, choice)
+
+        except Exception as e:
+            pass
 
     def additional_questions_drop_down(self, el):
         question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
@@ -676,46 +663,54 @@ class LinkedinEasyApply:
         self.select_dropdown(dropdown_field, choice)
 
     def additional_questions_date(self, el):
-        date_picker = el.find_element(By.CLASS_NAME, 'artdeco-datepicker__input ')
-        date_picker.clear()
-        date_picker.send_keys(date.today().strftime("%m/%d/%y"))
-        time.sleep(3)
-        date_picker.send_keys(Keys.RETURN)
-        time.sleep(2)
+        try:
+            date_picker = el.find_element(By.CLASS_NAME, 'artdeco-datepicker__input ')
+            date_picker.clear()
+            date_picker.send_keys(date.today().strftime("%m/%d/%y"))
+            time.sleep(3)
+            date_picker.send_keys(Keys.RETURN)
+            time.sleep(2)
+
+        except Exception as e:
+            pass
 
     def additional_questions_textbox_gpt(self, el):
-        # Question information
-        question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
-        question_text = question.find_element(By.TAG_NAME, 'label').text.lower()
         try:
-            txt_field = question.find_element(By.TAG_NAME, 'input')
-        except:
+            # Question information
+            question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
+            question_text = question.find_element(By.TAG_NAME, 'label').text.lower()
             try:
-                txt_field = question.find_element(By.TAG_NAME, 'textarea')  # TODO: Test textarea
+                txt_field = question.find_element(By.TAG_NAME, 'input')
             except:
-                raise Exception("Could not find textarea or input tag for question")
+                try:
+                    txt_field = question.find_element(By.TAG_NAME, 'textarea')  # TODO: Test textarea
+                except:
+                    raise Exception("Could not find textarea or input tag for question")
 
-        # Field type
-        text_field_type = txt_field.get_attribute('type').lower()
-        if 'numeric' in text_field_type:                                    # TODO: test numeric type
-            text_field_type = 'numeric'
-        elif 'text' in text_field_type:
-            text_field_type = 'text'
-        else:
-            return      # This function doesn't support other types, just return
+            # Field type
+            text_field_type = txt_field.get_attribute('type').lower()
+            if 'numeric' in text_field_type:                                    # TODO: test numeric type
+                text_field_type = 'numeric'
+            elif 'text' in text_field_type:
+                text_field_type = 'text'
+            else:
+                return      # This function doesn't support other types, just return
 
-        # Use GPT to answer the question
-        to_enter = ''
-        if text_field_type == 'numeric':
-            to_enter = self.gpt_answerer.answer_question_numeric(question_text)
-        else:
-            to_enter = self.gpt_answerer.answer_question_textual_wide_range(question_text)
+            # Use GPT to answer the question
+            to_enter = ''
+            if text_field_type == 'numeric':
+                to_enter = self.gpt_answerer.answer_question_numeric(question_text)
+            else:
+                to_enter = self.gpt_answerer.answer_question_textual_wide_range(question_text)
 
-        # Record the answer
-        self.record_gpt_answer(text_field_type, question_text, to_enter)
+            # Record the answer
+            self.record_gpt_answer(text_field_type, question_text, to_enter)
 
-        # Enter the answer
-        self.enter_text(txt_field, to_enter)
+            # Enter the answer
+            self.enter_text(txt_field, to_enter)
+
+        except Exception as e:
+            pass
 
     def additional_questions_textbox(self, el):
         question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
@@ -804,32 +799,36 @@ class LinkedinEasyApply:
         This function handles radio buttons
         :param el: The element containing the radio buttons
         """
-        # Question information
-        question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
-        radios = question.find_elements(By.CLASS_NAME, 'fb-text-selectable__option')
-        if len(radios) == 0:
-            raise Exception("No radio found in element")
+        try:
+            # Question information
+            question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
+            radios = question.find_elements(By.CLASS_NAME, 'fb-text-selectable__option')
+            if len(radios) == 0:
+                raise Exception("No radio found in element")
 
-        radio_text = el.text.lower()
-        radio_options = [text.text.lower() for text in radios]
+            radio_text = el.text.lower()
+            radio_options = [text.text.lower() for text in radios]
 
-        # Ask gpt for the most likely answer
-        answer = "yes"
-        answer = self.gpt_answerer.answer_question_from_options(radio_text, radio_options)
-        self.record_gpt_answer("radio", radio_text, answer)
+            # Ask gpt for the most likely answer
+            answer = "yes"
+            answer = self.gpt_answerer.answer_question_from_options(radio_text, radio_options)
+            self.record_gpt_answer("radio", radio_text, answer)
 
-        # Select the radio that matches the answer
-        to_select = None
-        for radio in radios:
-            if answer in radio.text.lower():
-                to_select = radio
-                break
-        # Fallback to the last radio if no answer was found
-        if to_select is None:
-            to_select = radios[-1]
+            # Select the radio that matches the answer
+            to_select = None
+            for radio in radios:
+                if answer in radio.text.lower():
+                    to_select = radio
+                    break
+            # Fallback to the last radio if no answer was found
+            if to_select is None:
+                to_select = radios[-1]
 
-        # Select the chosen radio
-        self.radio_select_simplified(to_select)
+            # Select the chosen radio
+            self.radio_select_simplified(to_select)
+
+        except Exception as e:
+            pass
 
     def additional_questions_radio(self, el):
         """
