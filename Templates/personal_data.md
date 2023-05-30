@@ -1,16 +1,16 @@
 Personal Info
 
-| Field      | Value                                |
-|------------|--------------------------------------|
-| First name | Michael                              |
-| Last name  | Fredericson                          |
-| Phone      | +1 1234567890                        |
-| Email      | michael@gmail.com                    |
+| Field      | Value                                 |
+|------------|---------------------------------------|
+| First name | Michael                               |
+| Last name  | Fredericson                           |
+| Phone      | +1 1234567890                         |
+| Email      | michael@gmail.com                     |
 | Address    | 7717 Rushcreek Rd NW, Rushville, Ohio |
-| Website    | https://poketpassmanager.com         |
-| LinkedIn   | https://www.linkedin.com/in/johndoe/ |
-| GitHub     | https://github.com/michael-fred      |
-| Twitter    | https://twitter.com/michael-fred     |
+| Website    | https://pocketpassmanager.com         |
+| LinkedIn   | https://www.linkedin.com/in/johndoe/  |
+| GitHub     | https://github.com/michael-fred       |
+| Twitter    | https://twitter.com/michael-fred      |
 
 
 | Language | Level               |
