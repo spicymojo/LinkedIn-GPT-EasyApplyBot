@@ -1,0 +1,68 @@
+email: email@domain.com
+password: yourpassword
+
+disableAntiLock: False
+
+remote: True
+
+experienceLevel:
+ internship: False
+ entry: True
+ associate: False
+ mid-senior level: False
+ director: False
+ executive: False
+
+jobTypes:
+ full-time: True
+ contract: True
+ part-time: False
+ temporary: True
+ internship: False
+ other: False
+ volunteer: False
+
+date:
+ all time: True
+ month: False
+ week: False
+ 24 hours: False
+
+positions:
+ #- First position
+ #- A second position
+ #- A third position
+ #- ...
+locations:
+ #- First location
+ #- A second location
+ #- A third location
+ #- ...
+ - Remote
+
+distance: 25
+
+companyBlacklist:
+ #- company
+ #- company2
+
+titleBlacklist:
+ #- word1
+ #- word2
+
+posterBlacklist:
+ #- name1
+ #- name2
+
+# ------------ Additional parameters: personal info ---------------
+personalInfo:
+ First Name: FirstName
+ Last Name: LastName
+ Phone Country Code: Canada (+1)              # See linkedin for your country code, must be exact according to the international platform, i.e. Italy (+39) not Italia (+39)
+ Mobile Phone Number: 1234567890
+ Street address: 123 Fake Street
+ City: Red Deer, Alberta                      # Include the state/province as well!
+ State: YourState
+ Zip: YourZip/Postal
+ Linkedin: https://www.linkedin.com/in/my-linkedin-profile
+ Website: https://www.my-website.com          # github/website is interchangeable here
