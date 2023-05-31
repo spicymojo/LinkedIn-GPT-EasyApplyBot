@@ -18,6 +18,7 @@ class EnvironmentKeys:
     """
     def __init__(self):
         self.skip_apply: bool = self._read_env_key_bool("SKIP_APPLY")
+        self.disable_description_filter: bool = self._read_env_key_bool("DISABLE_DESCRIPTION_FILTER")
         """
         If True, the bot will not start applying to jobs, but will get up to the point where it would start applying.
         - Useful to debug the blacklists.
@@ -58,6 +59,7 @@ class EnvironmentKeys:
         """
         print("\nEnv config:")
         print(f"\t- SKIP_APPLY: {self.skip_apply}\n")
+        print(f"\t- DISABLE_DESCRIPTION_FILTER: {self.disable_description_filter}\n")
         print("\n")
 
 
@@ -405,7 +407,7 @@ class LinkedinEasyApply:
         self.gpt_answerer.job_description = formatted_description
 
         # Check if the job is blacklisted
-        if not self.gpt_answerer.job_description_passes_filters():
+        if not self.env_config.disable_description_filter and not self.gpt_answerer.job_description_passes_filters():
             print(f"Blacklisted description {job_title} at {job_company}. Skipping...")
             self.record_skipped_job(job_title, job_company, job_location, "unknown link", job_description, "Description Filtering")     # TODO: Record the link
             raise Exception("Job description blacklisted")
