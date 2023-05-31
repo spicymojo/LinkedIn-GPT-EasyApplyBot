@@ -8,6 +8,48 @@ from datetime import date
 from itertools import product
 from gpt import GPTAnswerer
 from pathlib import Path
+import os
+
+
+class EnvironmentKeys:
+    """
+    Reads the environment variables and stores them.
+    These environment variables are used to configure the application execution.
+    """
+    def __init__(self):
+        self.skip_apply: bool = self._read_env_key_bool("SKIP_APPLY")
+        """
+        If True, the bot will not start applying to jobs, but will get up to the point where it would start applying.
+        - Useful to debug the blacklists.
+        """
+
+    @staticmethod
+    def _read_env_key(key: str) -> str:
+        """
+        Reads an environment variable and returns it.
+        :param key:
+        :return:
+        """
+        key = os.getenv(key)
+
+        if key is None:
+            return ""
+
+        return key
+
+    @staticmethod
+    def _read_env_key_bool(key: str) -> bool:
+        """
+        Reads an environment variable and returns True if it is "True", False otherwise
+        :param key:
+        :return:
+        """
+        key = os.getenv(key)
+
+        if key is None:
+            return False
+
+        return key == "True"
 
 
 class LinkedinEasyApply:
@@ -35,6 +77,9 @@ class LinkedinEasyApply:
 
         self.personal_info = parameters.get('personalInfo', [])
         self.eeo = parameters.get('eeo', [])
+
+        # Environment configuration
+        self.env_config = EnvironmentKeys()
 
         # Data to fill in the application using GPT
         # - Plain text resume
@@ -352,6 +397,10 @@ class LinkedinEasyApply:
             print(f"Blacklisted description {job_title} at {job_company}. Skipping...")
             self.record_skipped_job(job_title, job_company, job_location, "unknown link", job_description, "Description Filtering")     # TODO: Record the link
             raise Exception("Job description blacklisted")
+
+        if self.env_config.skip_apply:
+            print("ENV: Skipping apply. The SKIP_APPLY environment variable is set to True.")
+            return False
 
         # Start the application process
         print("Applying to the job....")
