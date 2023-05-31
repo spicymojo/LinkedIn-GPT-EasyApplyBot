@@ -1,5 +1,6 @@
 import os
 import re
+import textwrap
 from datetime import datetime
 from typing import Optional, List, Mapping, Any
 from utils import Markdown
@@ -15,6 +16,7 @@ from langchain.chat_models.base import BaseChatModel, SimpleChatModel
 from langchain.llms.base import LLM
 from Levenshtein import distance
 from langchain.schema import BaseMessage
+import inspect
 
 
 class LLMLogger:
@@ -88,6 +90,7 @@ class LoggerChatModel(SimpleChatModel):
 
 
 class GPTAnswerer:
+    # TODO: template = textwrap.dedent(template) all templates
     def __init__(self, resume: str, personal_data: str, cover_letter: str, job_filtering_rules: str):
         """
         Initializes the GPTAnswerer.
@@ -532,45 +535,49 @@ class GPTAnswerer:
         :return: True if the job title passes the filters, False otherwise.
         """
 
-        template = """The task is to check if the job title matches a list of job titles the user is interested in (white list) and a lis of not interesting job titles (black list).
+        template = """
+        The task is to determine if a given job title matches a list of job titles the user is interested in (whitelist) and a list of job titles that are not interesting (blacklist).
+
+        # Rules:
+        - Respond with either "yes" or "no". Only provide these two responses.
+        - The matching process is not exhaustive; the whitelist and blacklist are merely guides.
+        - Additional conditions are provided as keywords to help determine if the job title is interesting or not, but they are not exhaustive either.
+        - If the "other conditions" are negative (e.g., no accounting positions), and the job title matches the negative condition (e.g., accounting positions), respond with "no".
+        - Respond with "yes" if the job title is related to the whitelist, and not related to the blacklist.
+        - Respond with "no" if the job title is related to the blacklist.
+        - Respond with "no" if the job title is not related to the whitelist or the blacklist.
+        - The job title can have more information than the position as location, industry, etc. Ignore this information.
         
-        ## Rules
-        - Answer "yes" or "no".
-        - Don't answer anything else.
-        - The matching is not exhaustive, the whitelist and blacklist are just examples
-        - Other conditions are keywords to help decide if the job title is interesting or not, they are not exhaustive either.
-        - If "other conditions" are a negative (e.g. no accounting positions), then the job title is not interesting if it matches the negative condition (e.g. accounting positions). 
-        - Answer "yes" if the job title is related with the whitelist
-        - Answer "no" if the job title is related with the blacklist, the blacklist has priority over the whitelist
-        - Answer "no" if the job title is not related with the whitelist or the blacklist
-        
-        ## Examples
-        ### Example 1
+        # Examples:
+        ## Example 1
         Job title: "Junior Software Engineer"
-        Titles whitelist: SW Engineer, Data Scientist, Product Manager
-        Titles blacklist: Junior Software Engineer
+        Whitelist: Software Engineer, Data Scientist, Product Manager
+        Blacklist: Accounting Manager
+        Other conditions: Junior positions
+        Matches: no
+        
+        ## Example 2
+        Job title: "Cashflow Manager"
+        Whitelist: Data Scientist, Product Manager, Senior Software Engineer
+        Blacklist: Accounting Manager
         Other conditions: 
         Matches: no
         
-        ### Example 2
-        Job title: "Cashflow Manager"
-        Titles whitelist: Data Scientist, Product Manager, Senior Software Engineer
-        Titles blacklist: Accounting Manager
-        Other conditions: No Junior positions
-        Matches: no
-        
-        ### Example 2
+        ## Example 3
         Job title: "Product Manager - Healthcare"
-        Titles whitelist: Data Scientist, Product Manager, Senior Software Engineer
-        Titles blacklist: Accounting Manager
+        Whitelist: Product Manager
+        Blacklist: Accounting Manager
         Other conditions: No healthcare positions
-        Matches: no
+        Matches: no 
         
         -----
         
         Job title: "{job_title}"
         {job_title_filters}
         Matches: """
+
+        # Remove the leading tabs from the multiline string
+        template = textwrap.dedent(template)
 
         # Extract the whitelist and blacklist from the job filtering rules
         job_title_filters = Markdown.extract_content_from_markdown(self.job_filtering_rules, "Job Title Filters")
@@ -591,7 +598,8 @@ class GPTAnswerer:
         # Consider to add the resume to make a more informed decision, right now the responsibility to match resume against job description is on the recruiter.
         # This approach applies to what the user is interested in, not what the user is qualified for.
 
-        template = """The task is to check if the job descriptions matches some requirements (whitelist and blacklist).
+        template = """
+        The task is to check if the job descriptions matches some requirements (whitelist and blacklist).
 
         ## Rules
         - Answer "yes" or "no"
@@ -642,6 +650,9 @@ class GPTAnswerer:
         ```
         
         Matches: """
+
+        # Remove the leading tabs from the multiline string
+        template = textwrap.dedent(template)
 
         # Extract the whitelist and blacklist from the job filtering rules
         job_description_filters = Markdown.extract_content_from_markdown(self.job_filtering_rules, "Job Description Filters")
