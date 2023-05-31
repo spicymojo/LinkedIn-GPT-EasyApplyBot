@@ -570,11 +570,11 @@ class GPTAnswerer:
         output = chain.run(job_title=job_title, job_title_filters=job_title_filters)
 
         # Guard the output is one of the options
-        if output.lower not in ['yes', 'no']:
+        if output.lower() not in ['yes', 'no']:
             output = self._closest_matching_option(output, ['yes', 'no'])
 
         # Return the output as a boolean
-        return output == 'yes'
+        return output.lower() == 'yes'
 
     def job_description_passes_filters(self) -> bool:
         # Consider to add the resume to make a more informed decision, right now the responsibility to match resume against job description is on the recruiter.
