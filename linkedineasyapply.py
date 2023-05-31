@@ -51,6 +51,15 @@ class EnvironmentKeys:
 
         return key == "True"
 
+    def print_config(self):
+        """
+        Prints the configuration of the bot.
+        :return:
+        """
+        print("\nEnv config:")
+        print(f"\t- SKIP_APPLY: {self.skip_apply}\n")
+        print("\n")
+
 
 class LinkedinEasyApply:
     def __init__(self, parameters, driver):
@@ -80,6 +89,7 @@ class LinkedinEasyApply:
 
         # Environment configuration
         self.env_config = EnvironmentKeys()
+        self.env_config.print_config()
 
         # Data to fill in the application using GPT
         # - Plain text resume
