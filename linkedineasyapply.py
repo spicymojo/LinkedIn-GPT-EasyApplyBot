@@ -49,8 +49,13 @@ class LinkedinEasyApply:
         plain_text_cover_letter_path = parameters['uploads']['plainTextCoverLetter']
         file = open(plain_text_cover_letter_path, "r")      # Read the file
         plain_text_cover_letter: str = file.read()
+        # - Job filters
+        job_filters_path = parameters['uploads']['jobFilters']
+        file = open(job_filters_path, "r")                  # Read the file
+        job_filters: str = file.read()
+
         # - Build the GPT answerer using the plain text data
-        self.gpt_answerer = GPTAnswerer(plain_text_resume, plain_text_personal_data, plain_text_cover_letter)
+        self.gpt_answerer = GPTAnswerer(plain_text_resume, plain_text_personal_data, plain_text_cover_letter, job_filters)
 
     def login(self):
         try:
@@ -154,13 +159,14 @@ class LinkedinEasyApply:
         for job_tile in job_list:
             # Extract the job information from the Tile
             job_title, company, job_location, link, poster, apply_method = self.extract_job_information_from_tile(job_tile)
-            # Check if the job is blacklisted
-            is_blacklisted = self.is_blacklisted(job_title, company, poster, link)
             # Remember the job
             self.seen_jobs += link
 
-            if is_blacklisted:
-                print("Job contains blacklisted keyword or company or poster name! Skipping...")
+            # Check if the job title is blacklisted
+            if self.is_blacklisted(job_title, company, poster, link):
+                print(f"Blacklisted {job_title} at {company}, skipping...")
+                # Record the skipped job
+                self.record_skipped_job(job_title, company, job_location, link, "Title Filtering")
                 continue
 
             try:
@@ -242,7 +248,9 @@ class LinkedinEasyApply:
 
     def is_blacklisted(self, job_title, company, poster, link):
         """
-        Checks if the job is blacklisted.
+        Checks if the job is blacklisted by the user.
+
+        Currently, uses both the config.yaml file and the job_filters.md file to blacklist jobs.
 
         :param job_title:
         :param company:
@@ -250,8 +258,9 @@ class LinkedinEasyApply:
         :param link:
         :return: True if the job is blacklisted, False otherwise.
         """
-        # TODO: Use GPT to blacklist jobs, it's more accurate than the current method.
 
+        # - Blacklist from the config.yaml file
+        # TODO: Exclusively use GPT/job_filters.md to blacklist jobs.
         if job_title.lower().split(' ') in [word.lower() for word in self.title_blacklist]:
             return True
 
@@ -262,6 +271,13 @@ class LinkedinEasyApply:
             return True
 
         if link in self.seen_jobs:
+            return True
+
+        # - GPT blacklist with the job_filters.md
+        # TODO: Add blacklisted companies to the blacklist
+        #       The comparison doesn't need to be done with GPT.
+        #       It can be done with a simple string comparison, but it should be extracted from the same file
+        if self.gpt_answerer.job_title_passes_filters(job_title):
             return True
 
         return False
@@ -330,6 +346,12 @@ class LinkedinEasyApply:
         formatted_description = self.formatted_job_information(job_title, job_company, job_location, job_description)
         # Provide the job description to the answerer as context
         self.gpt_answerer.job_description = formatted_description
+
+        # Check if the job is blacklisted
+        if not self.gpt_answerer.job_description_passes_filters():
+            print(f"Blacklisted description {job_title} at {job_company}. Skipping...")
+            self.record_skipped_job(job_title, job_company, job_location, "unknown link", job_description, "Description Filtering")     # TODO: Record the link
+            raise Exception("Job description blacklisted")
 
         # Start the application process
         print("Applying to the job....")
@@ -755,6 +777,24 @@ class LinkedinEasyApply:
         except:
             print("Could not write the unprepared gpt question to the file! No special characters in the question is allowed: ")
             print(question_text)
+
+    def record_skipped_job(self, job_title: str, company: str, location: str, link: str, description: str, skipped_stage: str):
+        """
+        Records the skipped job to a csv file.
+        :param job_title:
+        :param company:
+        :param location:
+        :param link:
+        :param description: The description of the job.
+        :param skipped_stage: The stage at which the job was skipped e.g. "title filtering". "description filtering"
+        :return:
+        """
+        file_path = self.output_file_directory / 'skipped_jobs.csv'
+        to_write = [job_title, company, location, skipped_stage, link, description]
+
+        with open(file_path, 'a') as f:
+            writer = csv.writer(f)
+            writer.writerow(to_write)
 
     def scroll_slow(self, scrollable_element, start=0, end=3600, step=100, reverse=False):
         if reverse:

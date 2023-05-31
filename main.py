@@ -30,7 +30,7 @@ def validate_data_folder(app_data_folder: Path):
     - plain_text_cover_letter.md
     - personal_data.md
 
-    :returns: config_file, resume_file, cover_letter_file, plain_text_resume_file, plain_text_cover_letter_file, personal_data_file: The file paths, output_folder: The output folder path in the app_data_folder.
+    :returns: config_file, resume_file, cover_letter_file, plain_text_resume_file, plain_text_cover_letter_file, personal_data_file: The file paths, job_filters_file, output_folder: The output folder path in the app_data_folder.
     """
 
     config_file = app_data_folder / 'config.yaml'
@@ -39,10 +39,11 @@ def validate_data_folder(app_data_folder: Path):
     plain_text_resume_file = app_data_folder / 'plain_text_resume.md'
     plain_text_cover_letter_file = app_data_folder / 'plain_text_cover_letter.md'
     personal_data_file = app_data_folder / 'personal_data.md'
+    job_filters_file = app_data_folder / 'job_filters.md'
 
     # Check all files exist
     if not config_file.exists() or not resume_file.exists() or not cover_letter_file.exists() or not plain_text_resume_file.exists() or not plain_text_cover_letter_file.exists() or not personal_data_file.exists():
-        raise Exception(f'Missing files in the data folder! You must provide:\n\t-config.yaml\n\t-resume.pdf\n\t-cover_letter.pdf\n\t-plain_text_resume.md\n\t-plain_text_cover_letter.md\n\t-personal_data.md')
+        raise Exception(f'Missing files in the data folder! You must provide:\n\t-config.yaml\n\t-resume.pdf\n\t-cover_letter.pdf\n\t-plain_text_resume.md\n\t-plain_text_cover_letter.md\n\t-personal_data.md\n\t-job_filters.md\n\nYou can find an example of these files in the example_data folder.')
 
     # Output folder
     output_folder = app_data_folder / 'output'
@@ -51,11 +52,11 @@ def validate_data_folder(app_data_folder: Path):
         output_folder.mkdir()
 
     # Return the file paths
-    return config_file, resume_file, cover_letter_file, plain_text_resume_file, plain_text_cover_letter_file, personal_data_file, output_folder
+    return config_file, resume_file, cover_letter_file, plain_text_resume_file, plain_text_cover_letter_file, personal_data_file, job_filters_file, output_folder
 
 
-def file_paths_to_dict(resume_file: Path, cover_letter_file: Path, plain_text_resume_file: Path, plain_text_cover_letter_file: Path, personal_data_file: Path) -> dict:
-    parameters = {'resume': resume_file, 'coverLetter': cover_letter_file, 'plainTextResume': plain_text_resume_file, 'plainTextCoverLetter': plain_text_cover_letter_file, 'plainTextPersonalData': personal_data_file}
+def file_paths_to_dict(resume_file: Path, cover_letter_file: Path, plain_text_resume_file: Path, plain_text_cover_letter_file: Path, personal_data_file: Path, job_filters_file: Path) -> dict:
+    parameters = {'resume': resume_file, 'coverLetter': cover_letter_file, 'plainTextResume': plain_text_resume_file, 'plainTextCoverLetter': plain_text_cover_letter_file, 'plainTextPersonalData': personal_data_file, 'jobFilters': job_filters_file}
 
     return parameters
 
@@ -129,12 +130,12 @@ def validate_yaml(config_yaml_path: Path):
 def main(data_folder_path: Path):
     print(f"Using data folder path: {data_folder}")
     # Paths to the files inside the data folder
-    config_file, resume_file, cover_letter_file, plain_text_resume_file, plain_text_cover_letter_file, personal_data_file, output_folder = validate_data_folder(data_folder)
+    config_file, resume_file, cover_letter_file, plain_text_resume_file, plain_text_cover_letter_file, personal_data_file, job_filters_file, output_folder = validate_data_folder(data_folder)
 
     # Extract the parameters from the yaml file
     parameters = validate_yaml(config_file)
     # Add the remaining file paths to the parameters used by the bot
-    parameters['uploads'] = file_paths_to_dict(resume_file, cover_letter_file, plain_text_resume_file, plain_text_cover_letter_file, personal_data_file)
+    parameters['uploads'] = file_paths_to_dict(resume_file, cover_letter_file, plain_text_resume_file, plain_text_cover_letter_file, personal_data_file, job_filters_file)
     parameters['outputFileDirectory'] = output_folder
 
     # Start the bot
