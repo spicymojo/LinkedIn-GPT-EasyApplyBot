@@ -536,43 +536,25 @@ class GPTAnswerer:
         """
 
         template = """
-        The task is to determine if a given job title matches a list of job titles the user is interested in (whitelist) and a list of job titles that are not interesting (blacklist).
-
-        # Rules:
-        - Respond with either "yes" or "no". Only provide these two responses.
-        - The matching process is not exhaustive; the whitelist and blacklist are merely guides.
-        - Additional conditions are provided as keywords to help determine if the job title is interesting or not, but they are not exhaustive either.
-        - If the "other conditions" are negative (e.g., no accounting positions), and the job title matches the negative condition (e.g., accounting positions), respond with "no".
-        - Respond with "yes" if the job title is related to the whitelist, and not related to the blacklist.
-        - Respond with "no" if the job title is related to the blacklist.
-        - Respond with "no" if the job title is not related to the whitelist or the blacklist.
-        - The job title can have more information than the position as location, industry, etc. Ignore this information.
+        Given a job title, determine if the person is interested in the job title. A whitelist and a blacklist of job titles are provided to inform the decision.
         
-        # Examples:
-        ## Example 1
-        Job title: "Junior Software Engineer"
-        Whitelist: Software Engineer, Data Scientist, Product Manager
-        Blacklist: Accounting Manager
-        Other conditions: Junior positions
-        Matches: no
+        More detailed rules:
+        - Respond with either 'yes' or 'no'.
+        - Respond 'no' if the job title is not related to an element on the whitelist.
+        - Respond 'no' if the job title is related to an element on the blacklist.
         
-        ## Example 2
-        Job title: "Cashflow Manager"
-        Whitelist: Data Scientist, Product Manager, Senior Software Engineer
-        Blacklist: Accounting Manager
-        Other conditions: 
-        Matches: no
+        - Additional conditions might be provided. E.g. "exclude junior positions", or "exclude blockchain jobs", "include leadership positions", etc.
+            - Exclusions: respond with 'no'.
+            - Inclusions: respond with 'yes'.
+            - Other: what ever makes sense for the condition.
         
-        ## Example 3
-        Job title: "Product Manager - Healthcare"
-        Whitelist: Product Manager
-        Blacklist: Accounting Manager
-        Other conditions: No healthcare positions
-        Matches: no 
+        Additional considerations:
+        - Ignore additional information in the job title such as location or industry.
         
         -----
         
         Job title: "{job_title}"
+        Filters:
         {job_title_filters}
         Matches: """
 

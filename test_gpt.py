@@ -241,7 +241,7 @@ class TestGPT(unittest.TestCase):
     # Job Title Filters
     Titles whitelist: Senior Developer, Frontend Developer, IOS Developer, Product Manager
     Titles blacklist: Accounting Manager
-    Other conditions: No Junior positions, No healthcare, No blockchain
+    Other conditions: exclude junior positions, exclude healthcare, exclude blockchain
     
     # Job Description Filters
     ## Whitelist
@@ -306,6 +306,7 @@ class TestGPT(unittest.TestCase):
         self.assertIn("git", answer)
 
     def test_job_title_passes_filters(self):
+        print(f"Testing job title filters. User provided {self.answerer.job_filtering_rules}")
         self.assertTrue(self.answerer.job_title_passes_filters("iOS Developer - MeetKai Metaverse - REMOTE"))
         self.assertFalse(self.answerer.job_title_passes_filters("Nurse"))
         self.assertFalse(self.answerer.job_title_passes_filters("Junior IOS Developer"))
