@@ -2,7 +2,7 @@ import os
 import re
 from datetime import datetime
 from typing import Optional, List, Mapping, Any
-
+from utils import Markdown
 from langchain import PromptTemplate, OpenAI
 from langchain.chat_models import ChatOpenAI
 from langchain.callbacks.manager import CallbackManagerForLLMRun
@@ -87,9 +87,8 @@ class LoggerChatModel(SimpleChatModel):
         return reply.generations[0][0].text
 
 
-# TODO: Add a preprocessor to select better the context: resume, personal data, or cover letter.
 class GPTAnswerer:
-    def __init__(self, resume: str, personal_data: str, cover_letter: str = ""):
+    def __init__(self, resume: str, personal_data: str, cover_letter: str, job_filtering_rules: str):
         """
         Initializes the GPTAnswerer.
         :param resume: The resume text, preferably in Markdown format.
@@ -101,6 +100,14 @@ class GPTAnswerer:
         self.cover_letter = cover_letter
         self._job_description = ""
         self.job_description_summary = ""
+        self.job_filtering_rules = job_filtering_rules
+        '''
+        Two lists of job titles, a whitelist and a blacklist.
+        ```
+        Titles whitelist: Something, Something else, Another thing  
+        Titles blacklist: I don't want this, I don't want that
+        ``` 
+        '''
 
         # Wrapping the models on a logger to log the requests and responses
         self.llm = LoggerChatModel(llm=ChatOpenAI(model_name="gpt-3.5-turbo", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5))
@@ -452,12 +459,18 @@ class GPTAnswerer:
 
         # Guard the output is one of the options
         if output not in options:
-            # Choose the closest option to the output, using a levenshtein distance
-            closest_option = min(options, key=lambda option: distance(output, option))
-            output = closest_option
-            print(f"Error: The output of the LLM is not one of the options. The closest option ({closest_option}) will be returned instead. The output was: {output}, options were: {options}")
+            output = self._closest_matching_option(output, options)
 
         return output
+
+    @staticmethod
+    def _closest_matching_option(to_match: str, options: list[str]) -> str:
+        """
+        Choose the closest option to the output, using a levenshtein distance.
+        """
+        # Choose the closest option to the output, using a levenshtein distance
+        closest_option = min(options, key=lambda option: distance(to_match, option))
+        return closest_option
 
     @staticmethod
     def _contains_placeholder(text: str) -> bool:
@@ -511,3 +524,48 @@ class GPTAnswerer:
             concurrent_iterations += 1
 
         return result
+
+    def job_title_matches_resume(self, job_title: str) -> bool:
+        # TODO: Does this work with cheaper models?
+        template = """The task is to check if the job title matches a list of job titles the user is interested in (white list) and a lis of not interesting job titles (black list).
+        
+        ## Rules
+        - Answer "yes" or "no".
+        - Don't answer anything else.
+        - The matching is not exhaustive, the whitelist and blacklist are just examples
+        - Answer "yes" if the job title is related with the whitelist
+        - Answer "no" if the job title is related with the blacklist, the blacklist has priority over the whitelist
+        - Answer "no" if the job title is not related with the whitelist or the blacklist
+        
+        ## Examples
+        ### Example 1
+        Job title: "Junior Software Engineer"
+        Titles whitelist: SW Engineer, Data Scientist, Product Manager
+        Titles blacklist: Junior Software Engineer
+        Matches: no
+        
+        ### Example 2
+        Job title: "Cashflow Manager"
+        Titles whitelist: Data Scientist, Product Manager, Senior Software Engineer
+        Titles blacklist: Accounting Manager
+        Matches: no
+        
+        -----
+        
+        Job title: "{job_title}"
+        {job_title_filters}
+        Matches: """
+
+        # Extract the whitelist and blacklist from the job filtering rules
+        job_title_filters = Markdown.extract_content_from_markdown(self.job_filtering_rules, "Job Title Filters")
+
+        prompt = PromptTemplate(input_variables=["job_title", "job_title_filters"], template=template)
+        chain = LLMChain(llm=self.llm, prompt=prompt)
+        output = chain.run(job_title=job_title, job_title_filters=job_title_filters)
+
+        # Guard the output is one of the options
+        if output.lower not in ['yes', 'no']:
+            output = self._closest_matching_option(output, ['yes', 'no'])
+
+        # Return the output as a boolean
+        return output == 'yes'

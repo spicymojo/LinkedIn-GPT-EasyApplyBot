@@ -196,8 +196,25 @@ class TestGPT(unittest.TestCase):
     - Benefits include Pret Coffee Subscription, Pocket Money, Company Laptop/ Equipments, Share Option Scheme, Pluralsight subscription or training platform of your choice, Annual Leave 25 days, rising to 29 days, Pension Scheme, Enhanced family friendly policies from day one, Training encouraged/career development from day one, Regular salary performance/reviews, Supportive culture with like-minded techies.
     """
 
+    demo_job_titles_filters = """
+    # Job Title Filters
+    Titles whitelist: Senior Developer, Frontend Developer, IOS Developer
+    Titles blacklist: Accounting Manager
+    Other conditions: Not Junior positions
+    
+    # Job Description Filters
+    ## Whitelist
+    - Management, from a developer perspective
+    - Technical project management
+    - Frontend development, primarily iOS
+    
+    ## Blacklist
+    - Blockchain
+    - Medical/healthcare
+    """
+
     # Set up the answerer
-    answerer = GPTAnswerer(demo_resume_text, personal_data_text, demo_cover_letter_text)
+    answerer = GPTAnswerer(demo_resume_text, personal_data_text, demo_cover_letter_text, demo_job_titles_filters)
     # Use a description resume to test the answerer, so we don't have to wait for the resume summary to be generated
     answerer.job_description_summary = demo_job_description_real_text_summary
     # Correct way to do it: answerer.job_description = demo_job_description_real_text
@@ -246,6 +263,11 @@ class TestGPT(unittest.TestCase):
         answer = self.answerer.answer_question_from_options(question, options)
         print(f"{question}, Options {options}. Answer: {answer}")
         self.assertIn("git", answer)
+
+    def test_job_title_matches_resume(self):
+        self.assertTrue(self.answerer.job_title_matches_resume("iOS Developer"))
+        self.assertFalse(self.answerer.job_title_matches_resume("Nurse"))
+        self.assertFalse(self.answerer.job_title_matches_resume("Junior IOS Developer"))
 
 
 if __name__ == '__main__':

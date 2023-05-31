@@ -73,7 +73,7 @@ def validate_yaml(config_yaml_path: Path):
             raise exc
 
     mandatory_params = ['email', 'password', 'disableAntiLock', 'remote', 'experienceLevel', 'jobTypes', 'date',
-                        'positions', 'locations', 'distance', 'personalInfo', 'eeo']
+                        'positions', 'locations', 'distance', 'personalInfo']
 
     for mandatory_param in mandatory_params:
         if mandatory_param not in parameters:
@@ -122,11 +122,6 @@ def validate_yaml(config_yaml_path: Path):
     personal_info = parameters.get('personalInfo', [])
     for info in personal_info:
         assert personal_info[info] != ''
-
-    assert len(parameters['eeo'])
-    eeo = parameters.get('eeo', [])
-    for survey_question in eeo:
-        assert eeo[survey_question] != ''
 
     return parameters
 
