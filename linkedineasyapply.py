@@ -333,7 +333,7 @@ class LinkedinEasyApply:
         #       The comparison doesn't need to be done with GPT.
         #       It can be done with a simple string comparison, but it should be extracted from the same file
         if self.gpt_answerer.job_title_passes_filters(job_title):
-            return True
+            return False    # If the job title passes the filters, it is not blacklisted
 
         return False
 

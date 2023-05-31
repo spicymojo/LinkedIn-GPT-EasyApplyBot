@@ -538,6 +538,8 @@ class GPTAnswerer:
         - Answer "yes" or "no".
         - Don't answer anything else.
         - The matching is not exhaustive, the whitelist and blacklist are just examples
+        - Other conditions are keywords to help decide if the job title is interesting or not, they are not exhaustive either.
+        - If "other conditions" are a negative (e.g. no accounting positions), then the job title is not interesting if it matches the negative condition (e.g. accounting positions). 
         - Answer "yes" if the job title is related with the whitelist
         - Answer "no" if the job title is related with the blacklist, the blacklist has priority over the whitelist
         - Answer "no" if the job title is not related with the whitelist or the blacklist
@@ -547,12 +549,21 @@ class GPTAnswerer:
         Job title: "Junior Software Engineer"
         Titles whitelist: SW Engineer, Data Scientist, Product Manager
         Titles blacklist: Junior Software Engineer
+        Other conditions: 
         Matches: no
         
         ### Example 2
         Job title: "Cashflow Manager"
         Titles whitelist: Data Scientist, Product Manager, Senior Software Engineer
         Titles blacklist: Accounting Manager
+        Other conditions: No Junior positions
+        Matches: no
+        
+        ### Example 2
+        Job title: "Product Manager - Healthcare"
+        Titles whitelist: Data Scientist, Product Manager, Senior Software Engineer
+        Titles blacklist: Accounting Manager
+        Other conditions: No healthcare positions
         Matches: no
         
         -----
