@@ -525,8 +525,13 @@ class GPTAnswerer:
 
         return result
 
-    def job_title_matches_resume(self, job_title: str) -> bool:
-        # TODO: Does this work with cheaper models?
+    def job_title_passes_filters(self, job_title: str) -> bool:
+        """
+        Check if the job title passes the filters. The filters are a whitelist and a blacklist of job titles.
+        :param job_title: The job title to check.
+        :return: True if the job title passes the filters, False otherwise.
+        """
+
         template = """The task is to check if the job title matches a list of job titles the user is interested in (white list) and a lis of not interesting job titles (black list).
         
         ## Rules
@@ -569,3 +574,74 @@ class GPTAnswerer:
 
         # Return the output as a boolean
         return output == 'yes'
+
+    def job_description_passes_filters(self) -> bool:
+        # Consider to add the resume to make a more informed decision, right now the responsibility to match resume against job description is on the recruiter.
+        # This approach applies to what the user is interested in, not what the user is qualified for.
+
+        template = """The task is to check if the job descriptions matches some requirements (whitelist and blacklist).
+
+        ## Rules
+        - Answer "yes" or "no"
+        - Don't answer anything else
+        - The matching is not exhaustive, the whitelist and blacklist are just examples
+        - Answer "yes" if the job is related with the whitelist
+        - Answer "no" if the job is related with the blacklist, the blacklist has priority over the whitelist
+        - Answer "no" if something related to the blacklist is mentioned in the job description
+        - Answer "no" if the job is not related with the whitelist or the blacklist
+
+        ## Examples
+        ### Example 1
+        Job Description: Senior iOS Developer, with 5 years of experience in Swift and Objective-C, with strong passion for teaching and mentoring others
+        Job Description Filters
+        - Whitelist
+         - Senior positions, Developer, Software Engineer
+         - Teaching/communicating to others
+        
+        - Blacklist
+         - Blockchain
+         - Medical, I want nothing to do with healthcare
+
+        Matches: yes
+        
+        ### Example 1
+        Job Description: Senior iOS Developer for medical applications, with 5 years of experience in Swift and Objective-C, with strong passion for teaching and mentoring others
+        Job Description Filters
+        - Whitelist
+         - Senior positions, Developer, Software Engineer
+         - Teaching/communicating to others
+        
+        - Blacklist
+         - Blockchain
+         - Medical
+
+        Matches: no
+
+        -----
+
+        Job Description:
+        ``` 
+        {job_description}
+        ```
+        
+        Job Description Filters
+        ```
+        {job_description_filters}
+        ```
+        
+        Matches: """
+
+        # Extract the whitelist and blacklist from the job filtering rules
+        job_description_filters = Markdown.extract_content_from_markdown(self.job_filtering_rules, "Job Description Filters")
+
+        prompt = PromptTemplate(input_variables=["job_description", "job_description_filters"], template=template)
+        chain = LLMChain(llm=self.llm, prompt=prompt)
+        output = chain.run(job_description=self.job_description_summary, job_description_filters=job_description_filters)
+
+        # Guard the output is one of the options
+        if output.lower not in ['yes', 'no']:
+            output = self._closest_matching_option(output, ['yes', 'no'])
+
+        # Return the output as a boolean
+        return output == 'yes'
+

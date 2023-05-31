@@ -196,6 +196,47 @@ class TestGPT(unittest.TestCase):
     - Benefits include Pret Coffee Subscription, Pocket Money, Company Laptop/ Equipments, Share Option Scheme, Pluralsight subscription or training platform of your choice, Annual Leave 25 days, rising to 29 days, Pension Scheme, Enhanced family friendly policies from day one, Training encouraged/career development from day one, Regular salary performance/reviews, Supportive culture with like-minded techies.
     """
 
+    demo_job_description_real_text_summary_healthcare = """
+    Company: VitalCare
+    
+    Location: United Kingdom (Remote)
+    
+    £60,000/yr - £90,000/yr · Full-time
+    
+    Role: iOS Developer
+    
+    ## Requirements
+    
+    | Hard Skills                 | Experience              |
+    | --------------------------- | ----------------------- |
+    | Apple Developer             | 3+ years Professional Experience |
+    | HTTP and WebAPIs            | Solid understanding     |
+    | SwiftUI                     | Proficient & knowledgeable |
+    | Apple design principles     | Strong knowledge        |
+    | Third party SDKs            | Integration experience |
+    | TDD                         | Test driven development |
+    | Logging and crash reporting | Experience              |
+    
+    | Soft Skills              | Experience              |
+    | ------------------------ | ----------------------- |
+    | Agile/Scrum              | Way of working and experience |
+    | Azure DevOps             | Familiarity with repos, pipelines and boards |
+    | Multi-functional         | Can-do attitude         |
+    | Willingness to try/suggest new ideas |                   |
+    
+    ## More information
+    
+    - Developing, testing, deploying & maintaining applications - creating elegant Mobile UI/UX apple applications for VitalCare, a leading healthcare company.
+    - Working from user stories and tasks, ensuring that the developed applications meet the specific needs of the healthcare industry.
+    - Collaborating with back-end developers to consume WebAPIs and collaborating with a range of other stakeholders, including healthcare professionals, to gather requirements and deliver high-quality applications.
+    - Ability to understand and implement business requirements, translating them into technical requirements for healthcare applications.
+    - Creating and understanding secure apps with a strong emphasis on patient data privacy and security. Adhering to disciplined approaches to versioning, releases, and environments.
+    - Producing documentation and sharing knowledge with the team, promoting best practices and ensuring efficient collaboration.
+    - Striving to improve performance across our technological stack, exploring new tools, frameworks, and methodologies to enhance the development process.
+    - Ideally, having a demonstrable portfolio of previous healthcare-related app work, showcasing a keen eye for detail and elegant mobile UI/UX design.
+    - Remote-first work environment, but occasional meet-ups with other team members and the organization to foster teamwork and collaboration.
+    - Benefits include Pret Coffee Subscription, Pocket Money, Company Laptop/Equipment, Share Option Scheme, Pluralsight subscription or training platform of your choice, Annual Leave 25 days, rising to 29 days, Pension Scheme, Enhanced family-friendly policies from day one, Training encouraged/career development from day one, Regular salary performance/reviews, Supportive culture with like-minded techies.        """
+
     demo_job_titles_filters = """
     # Job Title Filters
     Titles whitelist: Senior Developer, Frontend Developer, IOS Developer
@@ -210,7 +251,7 @@ class TestGPT(unittest.TestCase):
     
     ## Blacklist
     - Blockchain
-    - Medical/healthcare
+    - Healthcare
     """
 
     # Set up the answerer
@@ -264,10 +305,17 @@ class TestGPT(unittest.TestCase):
         print(f"{question}, Options {options}. Answer: {answer}")
         self.assertIn("git", answer)
 
-    def test_job_title_matches_resume(self):
-        self.assertTrue(self.answerer.job_title_matches_resume("iOS Developer"))
-        self.assertFalse(self.answerer.job_title_matches_resume("Nurse"))
-        self.assertFalse(self.answerer.job_title_matches_resume("Junior IOS Developer"))
+    def test_job_title_passes_filters(self):
+        self.assertTrue(self.answerer.job_title_passes_filters("iOS Developer"))
+        self.assertFalse(self.answerer.job_title_passes_filters("Nurse"))
+        self.assertFalse(self.answerer.job_title_passes_filters("Junior IOS Developer"))
+
+    def test_job_description_passes_filters(self):
+        self.answerer.job_description_summary = self.demo_job_description_real_text_summary
+        self.assertTrue(self.answerer.job_description_passes_filters())
+
+        self.answerer.job_description_summary = self.demo_job_description_real_text_summary_healthcare
+        self.assertFalse(self.answerer.job_description_passes_filters())
 
 
 if __name__ == '__main__':
