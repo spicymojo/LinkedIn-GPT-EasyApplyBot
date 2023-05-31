@@ -563,6 +563,7 @@ class GPTAnswerer:
 
         # Extract the whitelist and blacklist from the job filtering rules
         job_title_filters = Markdown.extract_content_from_markdown(self.job_filtering_rules, "Job Title Filters")
+        # TODO: Raise an exception if the job title filters are not found
 
         prompt = PromptTemplate(input_variables=["job_title", "job_title_filters"], template=template)
         chain = LLMChain(llm=self.llm, prompt=prompt)
@@ -633,6 +634,7 @@ class GPTAnswerer:
 
         # Extract the whitelist and blacklist from the job filtering rules
         job_description_filters = Markdown.extract_content_from_markdown(self.job_filtering_rules, "Job Description Filters")
+        # TODO: Raise an exception if the job title filters are not found
 
         prompt = PromptTemplate(input_variables=["job_description", "job_description_filters"], template=template)
         chain = LLMChain(llm=self.llm, prompt=prompt)
