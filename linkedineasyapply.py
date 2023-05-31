@@ -631,22 +631,31 @@ class LinkedinEasyApply:
 
             # Field type
             text_field_type = txt_field.get_attribute('type').lower()
-            if 'numeric' in text_field_type:                                    # TODO: test numeric type
-                text_field_type = 'numeric'
-            elif 'text' in text_field_type:
-                text_field_type = 'text'
-            else:
+            if not ('numeric' in text_field_type or 'text' in text_field_type):
                 return      # This function doesn't support other types, just return
+
+            # Test field type
+            is_numeric_field = False
+            class_attribute = txt_field.get_attribute("id")
+            if class_attribute and 'numeric' in class_attribute:
+                is_numeric_field = True
+
+            # if 'numeric' in text_field_type:                                    # TODO: test numeric type
+            #     text_field_type = 'numeric'
+            # elif 'text' in text_field_type:
+            #     text_field_type = 'text'
+            # else:
+            #     return      # This function doesn't support other types, just return
 
             # Use GPT to answer the question
             to_enter = ''
-            if text_field_type == 'numeric':
+            if is_numeric_field:
                 to_enter = self.gpt_answerer.answer_question_numeric(question_text)
             else:
                 to_enter = self.gpt_answerer.answer_question_textual_wide_range(question_text)
 
             # Record the answer
-            self.record_gpt_answer(text_field_type, question_text, to_enter)
+            self.record_gpt_answer('numeric' if is_numeric_field else 'text', question_text, to_enter)
 
             # Enter the answer
             self.enter_text(txt_field, to_enter)
