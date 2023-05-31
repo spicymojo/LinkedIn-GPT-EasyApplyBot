@@ -221,7 +221,7 @@ class LinkedinEasyApply:
             if self.is_blacklisted(job_title, company, poster, link):
                 print(f"Blacklisted {job_title} at {company}, skipping...")
                 # Record the skipped job
-                self.record_skipped_job(job_title, company, job_location, link, "Title Filtering")
+                self.record_skipped_job(job_title, company, job_location, link, "", "Title Filtering")
                 continue
 
             try:
