@@ -581,17 +581,13 @@ class GPTAnswerer:
         # This approach applies to what the user is interested in, not what the user is qualified for.
 
         template = """
-        The task is to check if the job descriptions matches some requirements (whitelist and blacklist).
+        Given a job descriptions, determine if the person is interested in the job. A whitelist and a blacklist are to inform the decision, they contain job titles and keywords.
 
-        ## Rules
-        - Answer "yes" or "no"
-        - Don't answer anything else
-        - The matching is not exhaustive, the whitelist and blacklist are just examples
-        - Answer "yes" if the job is related with the whitelist
-        - Answer "no" if the job is related with the blacklist, the blacklist has priority over the whitelist
-        - Answer "no" if something related to the blacklist is mentioned in the job description
-        - Answer "no" if the job is not related with the whitelist or the blacklist
-
+        More detailed rules:
+        - Respond with either 'yes' or 'no'.
+        - Respond 'no' if the description is not related to an element on the whitelist.
+        - Respond 'no' if the description is related to an element on the blacklist.
+        
         ## Examples
         ### Example 1
         Job Description: Senior iOS Developer, with 5 years of experience in Swift and Objective-C, with strong passion for teaching and mentoring others
@@ -599,11 +595,9 @@ class GPTAnswerer:
         - Whitelist
          - Senior positions, Developer, Software Engineer
          - Teaching/communicating to others
-        
         - Blacklist
          - Blockchain
          - Medical, I want nothing to do with healthcare
-
         Matches: yes
         
         ### Example 1
@@ -612,11 +606,9 @@ class GPTAnswerer:
         - Whitelist
          - Senior positions, Developer, Software Engineer
          - Teaching/communicating to others
-        
         - Blacklist
          - Blockchain
          - Medical
-
         Matches: no
 
         -----
@@ -626,7 +618,7 @@ class GPTAnswerer:
         {job_description}
         ```
         
-        Job Description Filters
+        Filters:
         ```
         {job_description_filters}
         ```
