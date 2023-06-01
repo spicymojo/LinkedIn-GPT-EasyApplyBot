@@ -205,6 +205,9 @@ class TestGPT(unittest.TestCase):
     
     Role: iOS Developer
     
+    ## About VitalCare
+    VitalCare is a leading provider of healthcare solutions, with a focus on improving patient outcomes. We are a fast-growing company with a strong focus on innovation and technology. We are looking for a talented iOS Developer to join our team.
+    
     ## Requirements
     
     | Hard Skills                 | Experience              |
@@ -237,21 +240,31 @@ class TestGPT(unittest.TestCase):
     - Remote-first work environment, but occasional meet-ups with other team members and the organization to foster teamwork and collaboration.
     - Benefits include Pret Coffee Subscription, Pocket Money, Company Laptop/Equipment, Share Option Scheme, Pluralsight subscription or training platform of your choice, Annual Leave 25 days, rising to 29 days, Pension Scheme, Enhanced family-friendly policies from day one, Training encouraged/career development from day one, Regular salary performance/reviews, Supportive culture with like-minded techies.        """
 
-    demo_job_titles_filters = """
+    demo_job_titles_filters = """    
+    # About this document
+    On this document, explain the rules to filter through job postings. 
+    
+    Both `# Job Title Filters` and `# Job Description Filters` sections, must be included on the document.
+    
+    -----
+    
     # Job Title Filters
-    Titles whitelist: Senior Developer, Frontend Developer, IOS Developer, Product Manager
-    Titles blacklist: Accounting Manager
-    Other conditions: exclude junior positions, exclude healthcare, exclude blockchain
+    I'm looking for jobs that are close to (but not exclusively): Senior Developer, Frontend Developer, IOS Developer, Product Manager. Other roles similar to these are also acceptable.
+
+    Also, I'm not interested in junior positions, I'm looking for a mid-level position or higher.
+    
+    Also there are some industries I'm not interested in: blockchain and healthcare.
     
     # Job Description Filters
-    ## Whitelist
-    - Management, from a developer perspective
-    - Technical project management
-    - Frontend development, primarily iOS
+    I'm looking for jobs that are close to (but not exclusively): Senior Developer, Frontend Developer, IOS Developer, Product Manager. Other roles similar to these are also acceptable.
     
-    ## Blacklist
-    - Blockchain
-    - Healthcare
+    I'm not interested in junior positions. I'm looking for a mid-level positions or higher.
+    
+    I seek responsibilities that are close to (but not exclusively): UX design, product design, agile coding practices, animations, and web APIs usage.
+    
+    Ideal roles are those where UX/UI design knowledge is required, as well as, experience on agile methodologies, and startup experience. A job not meeting these requirements is still acceptable.
+    
+    I'm not interested on certain sectors: blockchain, healthcare, health, medicine, or accounting; these sectors are an automatic 'no'. 
     """
 
     # Set up the answerer

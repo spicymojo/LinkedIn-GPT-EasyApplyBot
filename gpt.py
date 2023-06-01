@@ -536,27 +536,19 @@ class GPTAnswerer:
         """
 
         template = """
-        Given a job title, determine if the person is interested in the job title. A whitelist and a blacklist of job titles are provided to inform the decision.
+        Given a job title and a set of preferences, determine if the person would be interested in the job. 
         
         More detailed rules:
         - Respond with either 'yes' or 'no'.
-        - Respond 'no' if the job title is not related to an element on the whitelist.
-        - Respond 'no' if the job title is related to an element on the blacklist.
-        
-        - Additional conditions might be provided. E.g. "exclude junior positions", or "exclude blockchain jobs", "include leadership positions", etc.
-            - Exclusions: respond with 'no'.
-            - Inclusions: respond with 'yes'.
-            - Other: what ever makes sense for the condition.
-        
-        Additional considerations:
-        - Ignore additional information in the job title such as location or industry.
+        - Respond 'yes' if the job title could of interest for the person.
+        - Respond 'no' if the job title seems irrelevant.
         
         -----
         
-        Job title: "{job_title}"
-        Filters:
+        ## Job title: {job_title}
+        ## User preferences:
         {job_title_filters}
-        Matches: """
+        ## Seems of interest: """
 
         # Remove the leading tabs from the multiline string
         template = textwrap.dedent(template)
@@ -581,49 +573,26 @@ class GPTAnswerer:
         # This approach applies to what the user is interested in, not what the user is qualified for.
 
         template = """
-        Given a job descriptions, determine if the person is interested in the job. A whitelist and a blacklist are to inform the decision, they contain job titles and keywords.
+        Given a job description and a set of preferences, determine if the person would be interested in the job. 
 
         More detailed rules:
         - Respond with either 'yes' or 'no'.
-        - Respond 'no' if the description is not related to an element on the whitelist.
-        - Respond 'no' if the description is related to an element on the blacklist.
-        
-        ## Examples
-        ### Example 1
-        Job Description: Senior iOS Developer, with 5 years of experience in Swift and Objective-C, with strong passion for teaching and mentoring others
-        Job Description Filters
-        - Whitelist
-         - Senior positions, Developer, Software Engineer
-         - Teaching/communicating to others
-        - Blacklist
-         - Blockchain
-         - Medical, I want nothing to do with healthcare
-        Matches: yes
-        
-        ### Example 1
-        Job Description: Senior iOS Developer for medical applications, with 5 years of experience in Swift and Objective-C, with strong passion for teaching and mentoring others
-        Job Description Filters
-        - Whitelist
-         - Senior positions, Developer, Software Engineer
-         - Teaching/communicating to others
-        - Blacklist
-         - Blockchain
-         - Medical
-        Matches: no
+        - Respond 'yes' if the job title could of interest for the person.
+        - Respond 'no' if the job title seems irrelevant.
 
         -----
 
-        Job Description:
+        ## Job Description:
         ``` 
         {job_description}
         ```
         
-        Filters:
+        ## User Preferences:
         ```
         {job_description_filters}
         ```
         
-        Matches: """
+        ## Seems of interest: """
 
         # Remove the leading tabs from the multiline string
         template = textwrap.dedent(template)
@@ -637,9 +606,9 @@ class GPTAnswerer:
         output = chain.run(job_description=self.job_description_summary, job_description_filters=job_description_filters)
 
         # Guard the output is one of the options
-        if output.lower not in ['yes', 'no']:
+        if output.lower() not in ['yes', 'no']:
             output = self._closest_matching_option(output, ['yes', 'no'])
 
         # Return the output as a boolean
-        return output == 'yes'
+        return output.lower() == 'yes'
 
