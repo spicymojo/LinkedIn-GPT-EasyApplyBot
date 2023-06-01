@@ -42,6 +42,11 @@ Your information is provided with a directory containing the following files:
 - `plain_text_cover_letter.md`. Will be used when the form ask for a cover letter. When the form ask to write a cover letter (not upload it), the bot will adjust the cover letter to the job description.
   - You can use placeholders in your cover letter, a placeholder is defined as `[[placeholder]]`, the LLM will look onto the job description to fill in the placeholders. E.g. `[[company]]` will be replaced by the given company name.
 - `personal_data.md`. More information about you, what you want of the job search, work authorization, extended information not covered by the resume, etc. This will be used to answer the questions, and inform other parts of the application. This file doesn't have any structure, will be interpreted by the LLM so fell free to add structure or information as you see fit.
+- `job-filters.md`. This file gives you more control over the jobs that the bot applies to. There are two sections: `# Job Title Filters` and `# Job Description Filters` , these must be included on the document, these names are hardcoded on the script __do not modify them__.
+
+  The `# Job Title Filters` section is used to filter the job title, and the `# Job Description Filters` section is used to filter the job description (once the job passes the job title filtering). The information on these sections is used on different steps of the process, you can have different rules on each section, or the same rules on both sections.
+  
+  Use natural language to explain what you are interested in, and what you are not. The LLM will try to understand what you mean, and will decide to apply or not to the job. 
 
 > An `output` folder will be created, where you will find all generated answers to the questions.
 

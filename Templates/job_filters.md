@@ -1,7 +1,9 @@
 # About this document
 On this document, explain the rules to filter through job postings. 
 
-Both `# Job Title Filters` and `# Job Description Filters` sections, must be included on the document.
+Both `# Job Title Filters` and `# Job Description Filters` sections, must be included on the document, these names are hardcoded on the script __do not modify them__.
+
+The `# Job Title Filters` section is used to filter the job title, and the `# Job Description Filters` section is used to filter the job description, once the job passes the job title filtering. The information on these sections is used on different steps of the process, you can have different rules on each section, or the same rules on both sections.
 
 -----
 
