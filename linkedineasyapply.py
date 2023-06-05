@@ -16,6 +16,7 @@ class EnvironmentKeys:
     Reads the environment variables and stores them.
     These environment variables are used to configure the application execution.
     """
+
     def __init__(self):
         self.skip_apply: bool = self._read_env_key_bool("SKIP_APPLY")
         self.disable_description_filter: bool = self._read_env_key_bool("DISABLE_DESCRIPTION_FILTER")
@@ -80,11 +81,11 @@ class LinkedinEasyApply:
         self.unprepared_questions_gpt_file_name = "unprepared_questions_gpt_answered"
         self.output_file_directory = Path(parameters['outputFileDirectory'])
 
-        self.resume_dir = parameters['uploads']['resume']
+        self.resume_dir: Path = parameters['uploads']['resume']
         if 'coverLetter' in parameters['uploads']:
-            self.cover_letter_dir = parameters['uploads']['coverLetter']
+            self.cover_letter_dir: Path = parameters['uploads']['coverLetter']
         else:
-            self.cover_letter_dir = ''
+            self.cover_letter_dir: Path = Path("")
 
         self.personal_info = parameters.get('personalInfo', [])
         self.eeo = parameters.get('eeo', [])
@@ -96,19 +97,19 @@ class LinkedinEasyApply:
         # Data to fill in the application using GPT
         # - Plain text resume
         plain_text_resume_path = parameters['uploads']['plainTextResume']
-        file = open(plain_text_resume_path, "r")            # Read the file
+        file = open(plain_text_resume_path, "r")  # Read the file
         plain_text_resume: str = file.read()
         # - Plain text personal data
         plain_text_personal_data_path = parameters['uploads']['plainTextPersonalData']
-        file = open(plain_text_personal_data_path, "r")     # Read the file
+        file = open(plain_text_personal_data_path, "r")  # Read the file
         plain_text_personal_data: str = file.read()
         # - Plain text cover letter
         plain_text_cover_letter_path = parameters['uploads']['plainTextCoverLetter']
-        file = open(plain_text_cover_letter_path, "r")      # Read the file
+        file = open(plain_text_cover_letter_path, "r")  # Read the file
         plain_text_cover_letter: str = file.read()
         # - Job filters
         job_filters_path = parameters['uploads']['jobFilters']
-        file = open(job_filters_path, "r")                  # Read the file
+        file = open(job_filters_path, "r")  # Read the file
         job_filters: str = file.read()
 
         # - Build the GPT answerer using the plain text data
@@ -138,7 +139,7 @@ class LinkedinEasyApply:
         random.shuffle(searches)
 
         page_sleep = 0
-        minimum_time = 60*15
+        minimum_time = 60 * 15
         minimum_page_time = time.time() + minimum_time
 
         for (position, location) in searches:
@@ -166,7 +167,7 @@ class LinkedinEasyApply:
                         minimum_page_time = time.time() + minimum_time
                     if page_sleep % 5 == 0:
                         sleep_time = random.randint(500, 900)
-                        print("Sleeping for " + str(sleep_time/60) + " minutes.")
+                        print("Sleeping for " + str(sleep_time / 60) + " minutes.")
                         time.sleep(sleep_time)
                         page_sleep += 1
             except:
@@ -180,7 +181,7 @@ class LinkedinEasyApply:
                 minimum_page_time = time.time() + minimum_time
             if page_sleep % 5 == 0:
                 sleep_time = random.randint(500, 900)
-                print("Sleeping for " + str(sleep_time/60) + " minutes.")
+                print("Sleeping for " + str(sleep_time / 60) + " minutes.")
                 time.sleep(sleep_time)
                 page_sleep += 1
 
@@ -235,15 +236,15 @@ class LinkedinEasyApply:
                 print("Could not apply to the job!")
                 pass
 
-            time.sleep(random.uniform(3, 5))        # Small human-like pause
+            time.sleep(random.uniform(3, 5))  # Small human-like pause
 
             try:
                 # Apply to the job
-                if not self.apply_to_job():         # Returns True if successful, false if already applied, raises exception if failed
-                    continue                        # If already applied, next job
+                if not self.apply_to_job():  # Returns True if successful, false if already applied, raises exception if failed
+                    continue  # If already applied, next job
             except:
                 self.record_failed_application(company, job_location, job_title, link, location)
-                continue                            # If failed, next job
+                continue  # If failed, next job
 
             # Record the successful application
             self.record_successful_application(company, job_location, job_title, link, location)
@@ -409,7 +410,7 @@ class LinkedinEasyApply:
         # Check if the job is blacklisted
         if not self.env_config.disable_description_filter and not self.gpt_answerer.job_description_passes_filters():
             print(f"Blacklisted description {job_title} at {job_company}. Skipping...")
-            self.record_skipped_job(job_title, job_company, job_location, "unknown link", job_description, "Description Filtering")     # TODO: Record the link
+            self.record_skipped_job(job_title, job_company, job_location, "unknown link", job_description, "Description Filtering")  # TODO: Record the link
             raise Exception("Job description blacklisted")
 
         if self.env_config.skip_apply:
@@ -418,11 +419,11 @@ class LinkedinEasyApply:
 
         # Start the application process
         print("Applying to the job....")
-        easy_apply_button.click()           # Click the easy apply button
-        submitted_application = False       # Flag to check if the application was submitted successfully
-        while not submitted_application:    # Iterate filling up fields until the submit application button is found
+        easy_apply_button.click()  # Click the easy apply button
+        submitted_application = False  # Flag to check if the application was submitted successfully
+        while not submitted_application:  # Iterate filling up fields until the submit application button is found
             try:
-                self.fill_up()              # Fill up the fields
+                self.fill_up()  # Fill up the fields
                 submitted_application = self.apply_to_job_form_next_step()  # Click the next button after filling up the fields
             except:
                 # On any error, close the application window, save the job for later and raise a final exception.
@@ -550,7 +551,7 @@ class LinkedinEasyApply:
             # TODO: return bool indicating if the question was answered or not to continue to the next question
 
             # Checkbox check for agreeing to terms and service
-            if self.additional_questions_agree_terms_of_service(el):        # If the question is "agree to terms of service", it's resolved -> skip to next question
+            if self.additional_questions_agree_terms_of_service(el):  # If the question is "agree to terms of service", it's resolved -> skip to next question
                 continue
 
             # Radio check
@@ -588,7 +589,7 @@ class LinkedinEasyApply:
     def additional_questions_drop_down_gpt(self, el):
         try:
             question = el.find_element(By.CLASS_NAME, 'jobs-easy-apply-form-element')
-            question_text = question.find_element(By.TAG_NAME, 'label').text.lower()        # TODO: This seems to be optional, try to answer the question without it, or use the top level title.
+            question_text = question.find_element(By.TAG_NAME, 'label').text.lower()  # TODO: This seems to be optional, try to answer the question without it, or use the top level title.
             dropdown_field = question.find_element(By.TAG_NAME, 'select')
 
             select = Select(dropdown_field)
@@ -634,7 +635,7 @@ class LinkedinEasyApply:
             # Field type
             text_field_type = txt_field.get_attribute('type').lower()
             if not ('numeric' in text_field_type or 'text' in text_field_type):
-                return      # This function doesn't support other types, just return
+                return  # This function doesn't support other types, just return
 
             # Test field type
             is_numeric_field = False
@@ -730,10 +731,14 @@ class LinkedinEasyApply:
                 # Remove the class .hidden from the element -> to show the upload button
                 self.browser.execute_script("arguments[0].classList.remove('hidden')", element)
                 # Send the file path to the element -> this will upload the file
+
+                resumePath = str(self.resume_dir.resolve())
+                letterPath = str(self.cover_letter_dir.resolve())
+
                 if 'resume' in parent.text.lower():
-                    element.send_keys(self.resume_dir)
-                elif 'cover' in parent.text.lower() and self.cover_letter_dir != '':
-                    element.send_keys(self.cover_letter_dir)
+                    element.send_keys(resumePath)
+                elif 'cover' in parent.text.lower() and letterPath != '':
+                    element.send_keys(letterPath)
                 # Got rid of 'required' test - I have never seen a required "something"
 
         except Exception as e:
@@ -804,17 +809,17 @@ class LinkedinEasyApply:
                     # TODO: Change to GPT supported? This works really well
                     if 'home address' in label:
                         self.home_address(pb)
-                        continue                    # Field is filled up, go to next
+                        continue  # Field is filled up, go to next
 
                     if 'contact info' in label:
                         self.contact_info()
-                        continue                    # Field is filled up, go to next
+                        continue  # Field is filled up, go to next
 
                     # 2. Send the resume and cover letter
                     if self.is_upload_field(pb):
                         try:
                             self.try_send_resume()
-                            continue                # Field is filled up, go to next
+                            continue  # Field is filled up, go to next
                         except Exception as e:
                             pass
 
@@ -926,7 +931,6 @@ class LinkedinEasyApply:
 
     def next_job_page(self, position, location, job_page):
         self.browser.get("https://www.linkedin.com/jobs/search/" + self.base_search_url +
-                         "&keywords=" + position + location + "&start=" + str(job_page*25))
+                         "&keywords=" + position + location + "&start=" + str(job_page * 25))
 
         self.avoid_lock()
-
