@@ -18,6 +18,20 @@ def init_browser():
     return driver
 
 
+def find_file(name_containing: str, with_extension: str, at_path: Path) -> Path:
+    """
+    Finds a file in a directory, given that the name contains a certain string and has a certain extension.
+    :param name_containing: The string that the file name must contain. Case-insensitive.
+    :param with_extension: The extension that the file must have, including the dot. Case-insensitive.
+    :param at_path: The path to the directory where the file is.
+    :return: The path to the first file that matches the criteria.
+    """
+
+    for file in at_path.iterdir():
+        if name_containing.lower() in file.name.lower() and file.suffix.lower() == with_extension.lower():
+            return file
+
+
 def validate_data_folder(app_data_folder: Path):
     """
     Reads the data folder and validates that all the files are in place.
@@ -34,12 +48,14 @@ def validate_data_folder(app_data_folder: Path):
     """
 
     config_file = app_data_folder / 'config.yaml'
-    resume_file = app_data_folder / 'resume.pdf'
-    cover_letter_file = app_data_folder / 'cover_letter.pdf'
     plain_text_resume_file = app_data_folder / 'plain_text_resume.md'
     plain_text_cover_letter_file = app_data_folder / 'plain_text_cover_letter.md'
     personal_data_file = app_data_folder / 'personal_data.md'
     job_filters_file = app_data_folder / 'job_filters.md'
+
+    # The resume and cover letter pdf can have more complex names as `JohnDoe-Resume.pdf` or `John-Doe-Cover-Letter.pdf`
+    resume_file = find_file('resume', '.pdf', app_data_folder)
+    cover_letter_file = find_file('cover', '.pdf', app_data_folder)
 
     # Check all files exist
     if not config_file.exists() or not resume_file.exists() or not cover_letter_file.exists() or not plain_text_resume_file.exists() or not plain_text_cover_letter_file.exists() or not personal_data_file.exists():
