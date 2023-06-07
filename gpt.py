@@ -140,6 +140,17 @@ class GPTAnswerer:
 
         return key
 
+    @staticmethod
+    def _preprocess_template_string(template: str) -> str:
+        """
+        Preprocesses the template string, removing the leading tabs -> less tokens to process.
+        :param template:
+        :return:
+        """
+        # Remove the leading tabs from the multiline string
+        processed_template = textwrap.dedent(template)
+        return processed_template
+
     def summarize_job_description(self, text: str) -> str:
         """
         Summarizes the text using the OpenAI API.
@@ -163,6 +174,9 @@ class GPTAnswerer:
         ---
         
         # Job Description Summary"""
+
+        summarize_prompt_template = self._preprocess_template_string(summarize_prompt_template)
+
         prompt = PromptTemplate(input_variables=["text"], template=summarize_prompt_template)  # Define the prompt (template)
         chain = LLMChain(llm=self.llm, prompt=prompt)
         output = chain.run(text=text)
@@ -288,6 +302,11 @@ class GPTAnswerer:
             }
         ]
 
+        # Preprocess the templates
+        resume_stuff_template = self._preprocess_template_string(resume_stuff_template)
+        resume_stuff_template = self._preprocess_template_string(resume_stuff_template)
+        resume_stuff_template = self._preprocess_template_string(resume_stuff_template)
+
         # Create the chains, using partials to fill in the data, as the MultiPromptChain does not support more than one input variable.
         # - Resume Stuff
         resume_stuff_prompt_template = PromptTemplate(template=resume_stuff_template, input_variables=["personal_data", "resume", "question"])
@@ -370,6 +389,8 @@ class GPTAnswerer:
         
         ## Answer:"""
 
+        template = self._preprocess_template_string(template)
+
         prompt = PromptTemplate(input_variables=["personal_data", "resume", "question"], template=template)  # Define the prompt (template)
         chain = LLMChain(llm=self.llm, prompt=prompt)
         output = chain.run(personal_data=self.personal_data, resume=self.resume, question=question)
@@ -405,6 +426,8 @@ class GPTAnswerer:
         {question}
         
         ## Answer:"""
+
+        template = self._preprocess_template_string(template)
 
         prompt = PromptTemplate(input_variables=["default_experience", "personal_data", "resume", "question"], template=template)  # Define the prompt (template)
         chain = LLMChain(llm=self.llm, prompt=prompt)
@@ -453,6 +476,8 @@ class GPTAnswerer:
         {options}
         
         ## Answer:"""
+
+        template = self._preprocess_template_string(template)
 
         prompt = PromptTemplate(input_variables=["personal_data", "resume", "question", "options"], template=template)  # Define the prompt (template)
         # formatted_prompt = prompt.format_prompt(personal_data=self.personal_data, resume=self.resume, question=question, options=options)  # Format the prompt with the data
@@ -511,6 +536,8 @@ class GPTAnswerer:
         
         ## Text without placeholders:"""
 
+        summarize_prompt_template = self._preprocess_template_string(summarize_prompt_template)
+
         result = text
 
         # Max number of iterations to avoid infinite loops
@@ -551,7 +578,7 @@ class GPTAnswerer:
         ## Seems of interest: """
 
         # Remove the leading tabs from the multiline string
-        template = textwrap.dedent(template)
+        template = self._preprocess_template_string(template)
 
         # Extract the whitelist and blacklist from the job filtering rules
         job_title_filters = Markdown.extract_content_from_markdown(self.job_filtering_rules, "Job Title Filters")
@@ -595,7 +622,7 @@ class GPTAnswerer:
         ## Seems of interest: """
 
         # Remove the leading tabs from the multiline string
-        template = textwrap.dedent(template)
+        template = self._preprocess_template_string(template)
 
         # Extract the whitelist and blacklist from the job filtering rules
         job_description_filters = Markdown.extract_content_from_markdown(self.job_filtering_rules, "Job Description Filters")
