@@ -1,5 +1,5 @@
 import time, random, csv, pyautogui, pdb, traceback, sys
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
@@ -643,13 +643,6 @@ class LinkedinEasyApply:
             if class_attribute and 'numeric' in class_attribute:
                 is_numeric_field = True
 
-            # if 'numeric' in text_field_type:                                    # TODO: test numeric type
-            #     text_field_type = 'numeric'
-            # elif 'text' in text_field_type:
-            #     text_field_type = 'text'
-            # else:
-            #     return      # This function doesn't support other types, just return
-
             # Use GPT to answer the question
             to_enter = ''
             if is_numeric_field:
@@ -663,8 +656,34 @@ class LinkedinEasyApply:
             # Enter the answer
             self.enter_text(txt_field, to_enter)
 
+            # Handle form errors
+            self.textbox_gpt_handle_form_errors(el, question_text, to_enter, txt_field)
+
         except Exception as e:
             pass
+
+    def textbox_gpt_handle_form_errors(self, el, question_text: str, answer_text: str, txt_field):
+        """
+        After filling up the form errors might occur, this function will try to handle those errors. If there are no errors, it will return.
+
+        :param el: The web element containing the form field.
+        :param question_text: The question text.
+        :param answer_text: The answer text.
+        :param txt_field: The text field element.
+        """
+        # TODO: Loop this thing up (max_retries)!
+
+        # See if the field has an error message
+        try:
+            error = el.find_element(By.CLASS_NAME, 'artdeco-inline-feedback--error')
+            error_text = error.text.lower()
+        except NoSuchElementException:
+            return
+
+        # Try to fix the error
+        new_answer = self.gpt_answerer.try_fix_answer(question_text, answer_text, error_text)
+        # Enter the newest answer
+        self.enter_text(txt_field, new_answer)
 
     def additional_questions_radio_gpt(self, el):
         """

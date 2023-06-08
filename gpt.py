@@ -113,9 +113,18 @@ class GPTAnswerer:
         '''
 
         # Wrapping the models on a logger to log the requests and responses
-        self.llm = LoggerChatModel(llm=ChatOpenAI(model_name="gpt-3.5-turbo", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5))
-        self.llm_basic = LoggerLLMModel(llm=OpenAI(model_name="text-curie-001", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5))
-        self.llm_advanced = LoggerLLMModel(llm=OpenAI(model_name="text-davinci-003", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5))
+        self.llm_cheap = LoggerChatModel(llm=ChatOpenAI(model_name="gpt-3.5-turbo", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5))
+        """
+        The cheapest model that can handle most tasks.
+        
+        Currently using the GPT-3.5 Turbo model.
+        """
+        self.llm_expensive = LoggerLLMModel(llm=OpenAI(model_name="text-davinci-003", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5))
+        """
+        The most expensive model, used for the tasks GPT-3.5 Turbo can't handle.
+        
+        Currently using the Davinci model x10 more expensive than the GPT-3.5 Turbo model.
+        """
 
     @property
     def job_description(self):
@@ -178,7 +187,7 @@ class GPTAnswerer:
         summarize_prompt_template = self._preprocess_template_string(summarize_prompt_template)
 
         prompt = PromptTemplate(input_variables=["text"], template=summarize_prompt_template)  # Define the prompt (template)
-        chain = LLMChain(llm=self.llm, prompt=prompt)
+        chain = LLMChain(llm=self.llm_cheap, prompt=prompt)
         output = chain.run(text=text)
 
         # Remove all spaces after new lines, until no more spaces are found
@@ -312,27 +321,27 @@ class GPTAnswerer:
         resume_stuff_prompt_template = PromptTemplate(template=resume_stuff_template, input_variables=["personal_data", "resume", "question"])
         resume_stuff_prompt_template = resume_stuff_prompt_template.partial(personal_data=self.personal_data, resume=self.resume, question=question)
         resume_stuff_chain = LLMChain(
-            llm=self.llm,
+            llm=self.llm_cheap,
             prompt=resume_stuff_prompt_template
         )
         # - Cover Letter
         cover_letter_prompt_template = PromptTemplate(template=cover_letter_template, input_variables=["cover_letter", "job_description", "question"])
         cover_letter_prompt_template = cover_letter_prompt_template.partial(cover_letter=self.cover_letter, job_description=self.job_description_summary, question=question)
         cover_letter_chain = LLMChain(
-            llm=self.llm,
+            llm=self.llm_cheap,
             prompt=cover_letter_prompt_template
         )
         # - Summary
         summary_prompt_template = PromptTemplate(template=summary_template, input_variables=["resume", "job_description", "question"])
         summary_prompt_template = summary_prompt_template.partial(resume=self.resume, job_description=self.job_description_summary, question=question)
         summary_chain = LLMChain(
-            llm=self.llm,
+            llm=self.llm_cheap,
             prompt=summary_prompt_template
         )
 
         # Create the router chain
         destination_chains = {"resume": resume_stuff_chain, "cover letter": cover_letter_chain, "summary": summary_chain}
-        default_chain = ConversationChain(llm=self.llm, output_key="text")  # Is it a ConversationChain? Or a LLMChain? Or a MultiPromptChain?
+        default_chain = ConversationChain(llm=self.llm_cheap, output_key="text")  # Is it a ConversationChain? Or a LLMChain? Or a MultiPromptChain?
         destinations = [f"{p['name']}: {p['description']}" for p in prompt_infos]
         destinations_str = "\n".join(destinations)
         router_template = MULTI_PROMPT_ROUTER_TEMPLATE.format(
@@ -345,7 +354,8 @@ class GPTAnswerer:
         )
 
         # TODO: This is expensive. Test with new models / new versions of langchain.
-        router_chain = LLMRouterChain.from_llm(self.llm_advanced, router_prompt)        # Using the advanced LLM, as is the only one that seems to work with the router chain expected output format.
+        # TODO: PR Langchain with a fix to this that can use gpt3, because the problem is with the prompt/handling of the output, as expects a JSON.
+        router_chain = LLMRouterChain.from_llm(self.llm_expensive, router_prompt)        # Using the advanced LLM, as is the only one that seems to work with the router chain expected output format.
 
         chain = MultiPromptChain(router_chain=router_chain, destination_chains=destination_chains, default_chain=resume_stuff_chain, verbose=True)
 
@@ -392,7 +402,7 @@ class GPTAnswerer:
         template = self._preprocess_template_string(template)
 
         prompt = PromptTemplate(input_variables=["personal_data", "resume", "question"], template=template)  # Define the prompt (template)
-        chain = LLMChain(llm=self.llm, prompt=prompt)
+        chain = LLMChain(llm=self.llm_cheap, prompt=prompt)
         output = chain.run(personal_data=self.personal_data, resume=self.resume, question=question)
 
         return output
@@ -430,7 +440,7 @@ class GPTAnswerer:
         template = self._preprocess_template_string(template)
 
         prompt = PromptTemplate(input_variables=["default_experience", "personal_data", "resume", "question"], template=template)  # Define the prompt (template)
-        chain = LLMChain(llm=self.llm, prompt=prompt)
+        chain = LLMChain(llm=self.llm_cheap, prompt=prompt)
         output_str = chain.run(personal_data=self.personal_data, resume=self.resume, question=question, default_experience=default_experience)
 
         # Convert to int with error handling
@@ -482,7 +492,7 @@ class GPTAnswerer:
         prompt = PromptTemplate(input_variables=["personal_data", "resume", "question", "options"], template=template)  # Define the prompt (template)
         # formatted_prompt = prompt.format_prompt(personal_data=self.personal_data, resume=self.resume, question=question, options=options)  # Format the prompt with the data
         # output = self.llm(formatted_prompt.to_string())  # Send the prompt to the llm
-        chain = LLMChain(llm=self.llm, prompt=prompt)
+        chain = LLMChain(llm=self.llm_cheap, prompt=prompt)
         output = chain.run(personal_data=self.personal_data, resume=self.resume, question=question, options=options)
 
         # Guard the output is one of the options
@@ -547,7 +557,7 @@ class GPTAnswerer:
         # Remove the placeholder from the text, loop until there are no more placeholders
         while self._contains_placeholder(result) and concurrent_iterations < max_iterations:
             prompt = PromptTemplate(input_variables=["text_with_placeholders"], template=summarize_prompt_template)     # Define the prompt (template)
-            chain = LLMChain(llm=self.llm, prompt=prompt)
+            chain = LLMChain(llm=self.llm_cheap, prompt=prompt)
             output = chain.run(text_with_placeholders=result)
 
             result = output
@@ -585,7 +595,7 @@ class GPTAnswerer:
         # TODO: Raise an exception if the job title filters are not found
 
         prompt = PromptTemplate(input_variables=["job_title", "job_title_filters"], template=template)
-        chain = LLMChain(llm=self.llm, prompt=prompt)
+        chain = LLMChain(llm=self.llm_cheap, prompt=prompt)
         output = chain.run(job_title=job_title, job_title_filters=job_title_filters)
 
         # Guard the output is one of the options
@@ -629,7 +639,7 @@ class GPTAnswerer:
         # TODO: Raise an exception if the job title filters are not found
 
         prompt = PromptTemplate(input_variables=["job_description", "job_description_filters"], template=template)
-        chain = LLMChain(llm=self.llm, prompt=prompt)
+        chain = LLMChain(llm=self.llm_cheap, prompt=prompt)
         output = chain.run(job_description=self.job_description_summary, job_description_filters=job_description_filters)
 
         # Guard the output is one of the options
@@ -639,3 +649,35 @@ class GPTAnswerer:
         # Return the output as a boolean
         return output.lower() == 'yes'
 
+    def try_fix_answer(self, question: str, answer: str, error: str) -> str:
+        """
+        Try to fix the answer, using the llm. The answer is a string like "yes", "no", "maybe", "I don't know".
+        """
+        template = """\
+        The objective is to fix the text of a form input on a web page.
+
+        ## Rules
+        - Use the error to fix te original text.
+        - The error "Please enter a valid answer" usually means the text is too large, shorten the reply to less than a tweet.
+        - For errors like "Enter a whole number between 0 and 30", just need a number.
+        
+        -----
+        
+        ## Form Question
+        {question}
+        
+        ## Input
+        {input} 
+        
+        ## Error
+        {error}  
+        
+        ## Fixed Input
+        """
+        template = self._preprocess_template_string(template)
+
+        prompt = PromptTemplate(input_variables=["question", "input", "error"], template=template)
+        chain = LLMChain(llm=self.llm_cheap, prompt=prompt)
+        output = chain.run(question=question, input=answer, error=error)
+
+        return output
