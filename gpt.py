@@ -248,9 +248,18 @@ class GPTAnswerer:
 
         # - Cover Letter
         cover_letter_template = """
-        Using the job description provided below, modify the cover letter to personalize it to the job and company. Replace all placeholders [[placeholder]] with the appropriate information from the job description. If there is no information to fill in a placeholder, remove it and adapt the answer accordingly. 
+        The following is a cover letter, vey slightly modified to better address the job description. 
 
-        If the question is "cover letter," answer with the modified cover letter. Do not change the signature name, it's the real name of the person who's resume it is, and who's answering the question (you).
+        If the question is "cover letter," answer with the modified cover letter. 
+        
+        ## Rules
+        - The signature name is unchanged, it's the real name of the person who's resume it is (who's answering the questions).
+        - The cover letter is preserved almost untouched, it's very slightly modified to better match the job description keywords.
+        - All personal paragraphs aren't modified at all.
+        - Only paragraphs about why the person is a good fit for the job are modified.
+        - All placeholders [[placeholder]] are replaced with the appropriate information from the job description. 
+        - When there is no information to fill in a placeholder, it's removed and the text is adapted accordingly.
+        - The structure and meaning of the cover letter is keep untouched, only the keywords and placeholders are modified.    
         
         ## Job Description:
         ```
@@ -265,7 +274,7 @@ class GPTAnswerer:
         ## Question:
         {question}
         
-        ## Answer:"""
+        ## Custom Cover Letter:"""
 
         # - Summary
         summary_template = """
@@ -301,7 +310,7 @@ class GPTAnswerer:
             },
             {
                 "name": "cover letter",
-                "description": "Addressing questions about the cover letter and personal characteristics about the role. Questions like 'cover letter', 'why do you want to work here?', etc.",
+                "description": "Addressing questions about the cover letter and personal characteristics about the role. Questions like 'cover letter', 'why do you want to work here?', 'Your message to the hiring manager', etc.",
                 "prompt_template": cover_letter_template
             },
             {
