@@ -113,7 +113,7 @@ class GPTAnswerer:
         '''
 
         # Wrapping the models on a logger to log the requests and responses
-        self.llm_cheap = LoggerChatModel(llm=ChatOpenAI(model_name="gpt-3.5-turbo", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5))
+        self.llm_cheap = LoggerChatModel(llm=ChatOpenAI(model_name="gpt-3.5-turbo-0613", openai_api_key=GPTAnswerer.openai_api_key(), temperature=0.5))
         """
         The cheapest model that can handle most tasks.
         
