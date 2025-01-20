@@ -10,19 +10,7 @@ This is a fork of a fork of the original _LinkedIn Easy Apply Bot_, but it is a 
 This bot is written in Python using Selenium and OpenAI.
 
 ## Fork Notes
-The original bot implementation, couldn't handle open questions, just used keywords and predefined answers. Such couldn't complete a lot of the applications, as any open question or weird selector would make the bot unable to answer. Now that we have LLM, this is an easy problem to solve, just ask the bot to answer the question, and it will do it.
-
-Another great benefit, is that you can provide way more information to the bot, so it can address truthfully the job requirements, and the questions, just as you would do. 
-
-I did try to tidy the code a bit, but I didn't want to spend too much time on it, as I just wanted to get it working, so there is still a lot of work to do there.
-
-Thank you for everyone that contributed to the original bot, and all the forks, made my work way easier.
-
-_by Jorge Frías_
-
-### Future updates
-- I will keep updating this fork as I use it for my own "educational research".
-- I will add features as I find fun applications, or I require them for my "educational research".
+Forking this when the day comes, at some point, that we have time to actually make my own version of this
 
 ## Setup
 
